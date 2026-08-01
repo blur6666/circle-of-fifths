@@ -115,6 +115,39 @@ and no `flats` made `k.sharps || k.flats` evaluate to `undefined`, which turned
 `STAFF_S` into `NaN` through `Math.min` and blanked *every* staff on the wheel, not
 just that one. Hence the `|| 0` in `staffPart`.
 
+### Why there is no sharp/flat switch, and what it costs
+
+A control to flip 5/6/7 between `B F♯ C♯` and `C♭ G♭ D♭` was considered and dropped.
+It would not fix anything — it would only move which keys are wrong.
+
+The window spans three adjacent sectors (IV, I, V), so only five windows touch the
+enharmonic block: roots `E`, 5, 6, 7, and `A♭`. The other seven are correct under any
+spelling. Twelve sectors cannot hold fifteen keys, so **no layout gets all five
+right** — three is the ceiling, and four layouts tie at 10 of 12 overall:
+
+| positions 5, 6, 7 | correct | misspelled |
+|---|---|---|
+| **B, F♯, C♯** (ours) | E, B, F♯ | C♯, A♭ |
+| B, F♯, D♭ | E, B, A♭ | F♯, D♭ |
+| B, G♭, D♭ | E, D♭, A♭ | B, G♭ |
+| C♭, G♭, D♭ | G♭, D♭, A♭ | E, C♭ |
+
+The middle two are **mixed** — a sharp spelling next to a flat one — and that is
+musically fine. It is tempting to reason that the three must flip as a unit because
+any *correct* window spells them uniformly; that inference is wrong, because two
+windows have to break whatever you choose, and mixed layouts simply break different
+ones.
+
+**Two windows are knowingly wrong, and are not bugs:**
+
+- `A♭` major shows its IV as `C♯`, where the music says `D♭`.
+- `C♯` major shows its V as `A♭`, where the music says `G♯` — a spelling that has no
+  sector at all.
+
+Don't "fix" either in isolation. Changing position 7 to `D♭` repairs `A♭` but breaks
+`F♯` and `D♭` instead; the score stays 10 of 12. Only change the spelling if the
+owner wants a different pair of casualties.
+
 ## Flags, top of script.js
 
 - `SHOW_KEY_SIGNATURES` — the outer coloured band. **Off**; it only ever existed to
