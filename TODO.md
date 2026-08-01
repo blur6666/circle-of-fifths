@@ -1,11 +1,11 @@
-1. Add the key degree on each "square" inside the mask: for example in the default C key:
-    - Am: vi
-    - Bdmin: vii° (??)
-    - C: I
-    - Dm: ii
-    - Em: iii
-    - F: IV
-    - G: V
+// DONE 1. Add the key degree on each "square" inside the mask: for example in the default C key:
+// DONE     - Am: vi
+// DONE     - Bdmin: vii° (??)
+// DONE     - C: I
+// DONE     - Dm: ii
+// DONE     - Em: iii
+// DONE     - F: IV
+// DONE     - G: V
 
 One of the the mask on the circle of fifth's bigger value is that when it moves around, is that the position of the values keeps the same, so we automatically detect all notes, their degree, chord, etc
 

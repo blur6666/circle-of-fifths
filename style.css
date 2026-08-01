@@ -272,6 +272,23 @@ body.armed-wheel .hint { color: var(--ink-2); }
 .prose h2:first-child { margin-top: 0; }
 .prose p { margin: 0 0 10px; }
 
+.degree-drone-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 26px 22px;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.degree-drone-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .chords {
   border-collapse: collapse;
   margin: 12px 0 14px;
@@ -368,31 +385,32 @@ body.armed-wheel #arm-ring {
 .staff { cursor: help; }
 .hub-sig { opacity: 0.92; }
 
-hover-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px; /* Space between drone and shadow */
+.hover-container {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .drone {
   animation: float 4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .shadow {
-  width: 50px;
-  height: 10px;
-  background-color: rgba(0, 0, 0, 0.4);
-  border-radius: 50%; /* Makes it an oval shape */
-  filter: blur(4px); /* Softens the shadow edges */
-  
-  /* Syncs perfectly with the drone's 4s animation */
+  fill: rgba(0, 0, 0, 0.5);
+  filter: blur(3px);
   animation: shadow-pulse 4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+body.degree-drones-off .drone,
+body.degree-drones-off .shadow {
+  animation: none;
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { transform: translateY(-4px); }
+  50% { transform: translateY(-12px); }
 }
 
 @keyframes shadow-pulse {
@@ -401,7 +419,7 @@ hover-container {
     opacity: 0.5; 
   }
   50% { 
-    transform: scale(0.7); /* Shadow gets smaller as drone goes up */
-    opacity: 0.2;          /* Shadow fades as drone goes up */
+    transform: scale(0.7);
+    opacity: 0.2;
   }
 }

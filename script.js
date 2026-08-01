@@ -316,11 +316,19 @@ function buildSpotlight(svg, defs) {
   el('path', {
     d: outside, 'fill-rule': 'evenodd', fill: C_STAGE, opacity: SCRIM_ALPHA
   }, g);
-  const degreeNodes = DEGREE_LABELS.map(([label, radius, angle, size]) => {
+  const degreeNodes = DEGREE_LABELS.map(([label, radius, angle, size], index) => {
     const [x, y] = pt(radius, angle);
-    return { node: text(g, label, {
-      x, y, class: 'degree-label', fill: C_MASK_EDGE, 'font-size': size, opacity: 0.9
-    }), x, y };
+    const animationDelay = `-${(index * 4) / DEGREE_LABELS.length}s`;
+    const hoverContainer = el('g', { class: 'hover-container' }, g);
+    text(hoverContainer, label, {
+      x, y, class: 'degree-label drone', fill: C_MASK_EDGE, 'font-size': size, opacity: 0.9,
+      style: `animation-delay: ${animationDelay}`
+    });
+    el('ellipse', {
+      cx: x, cy: y + size * 0.65, rx: size * 0.95, ry: size * 0.19, class: 'shadow',
+      style: `animation-delay: ${animationDelay}`
+    }, hoverContainer);
+    return { node: hoverContainer, x, y };
   });
   /* The "you can turn this" cue for mask mode: the same window outline, drawn fat
      and invisible underneath the real one, pulsed by JS when body.armed-mask is
@@ -539,6 +547,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
 
   const hint  = document.getElementById('hint');
   const moveMask = document.getElementById('move-mask');
+  const degreeDroneToggle = document.getElementById('degree-drone-toggle');
   const steps = [...document.querySelectorAll('[data-step]')];
 
   const HINTS = {
@@ -615,6 +624,11 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   if (moveMask) {
     moveMask.addEventListener('change', () => {
       setMode(moveMask.checked ? 'mask' : 'wheel');
+    });
+  }
+  if (degreeDroneToggle) {
+    degreeDroneToggle.addEventListener('change', () => {
+      document.body.classList.toggle('degree-drones-off', degreeDroneToggle.checked);
     });
   }
 
