@@ -28,104 +28,321 @@ html { background: var(--stage); }
 
 body {
   margin: 0;
-  padding: 8px 16px 32px;
   background: var(--stage);
   color: var(--ink);
   font-family: var(--display);
+}
+
+/* ---------------------------------------------------------------- screens */
+/* Two of them, each a viewport tall. The wheel gets a whole screen to itself so it
+   can be as big as the shorter side allows; everything else that used to crowd it
+   off the top and bottom now sits beside it. */
+.screen {
+  position: relative;
+  min-height: 100vh;
+  padding: 20px 26px 22px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+}
+
+/* Out of the flow on purpose. In flow it pushed the wheel down by its own height
+   and the wheel is sized off whatever height is left — so the title was costing the
+   wheel ~55px of diameter to sit in a corner that is empty anyway. The left column
+   is blank above the controls, which is exactly where this lands. */
+#wheel-screen h1 {
+  position: absolute;
+  top: 20px;
+  left: 26px;
+  margin: 0;
 }
 
 h1 {
-  font-size: 20px;
+  font-size: clamp(22px, 2.4vw, 34px);
   font-weight: 700;
-  margin: 2px 0 6px;
-  letter-spacing: -0.015em;
+  margin: 0;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
-/* Capped three ways so the wheel and both arrow rows fit one screen without
-   scrolling. Asked for deliberately, knowing it costs legibility — this is a
-   trade, not an oversight. The 132px is the page chrome above and below (title +
-   two control rows). On a 1366x768 Chromebook, once browser chrome is subtracted,
-   it lands the wheel near 500-540px, which draws the 10px staff-cell letters at
-   ~5px: chord names, mask and diminished ring stay clear, the key-signature grids
-   do not. Raise the subtraction, or drop the 100vh term, to trade scrolling back
-   for readable grids. */
-#wheel {
-  width: min(94vw, 950px, calc(100vh - 132px));
-  height: auto;
-  display: block;
-}
-
-/* ------------------------------------------------------------- controls */
-/* Three columns so the arrows sit centred on the wheel regardless of what else is
-   in the row; the switch rides off to the side without shoving them left. */
-.controls {
+/* Left column | wheel | right column. `1fr auto 1fr` puts the wheel in the middle of
+   the *window* rather than the middle of the leftovers, which is the whole point of
+   the layout — the two side columns come out equal as a consequence, so the guide
+   gets exactly as much room as the controls. */
+.stage {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  width: min(94vw, 950px);
-  margin: 5px 0;
+  gap: 18px;
+}
+
+/* Sized off the *shorter* side of the window, since the whole screen is now its own.
+   Only 42px of this screen's chrome is real (20 top padding + 22 bottom) now that
+   the title is out of the flow; the subtraction is 76 because the last 34px buy
+   clearance for the guide — see the note there. The 58vw term only bites on tall
+   narrow windows, where the side columns would otherwise be squeezed to nothing.
+
+   The viewBox is framed on the wheel's *resting* layout. Turning it swings the wide
+   key signatures up to 12% further out sideways (never vertically — checked), and
+   overflow: visible lets them paint over the stage either side instead of being cut
+   off. Framing for the worst case instead would cost 15% of the disc's size all the
+   time. That overrun happens at 3 and 9 o'clock — level with the controls — so the
+   side columns hug the window edges and leave it room. */
+#wheel {
+  grid-column: 2;
+  width: min(calc(100vh - 76px), 58vw);
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* ------------------------------------------------------------- controls */
+/* All in one column down the left, at the window's vertical midpoint: what the
+   arrows will do, what they will do it to, the arrows, and Reset held back a little
+   from the rest so it can't be hit by accident. */
+.side {
+  grid-column: 1;
+  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 100%;
 }
 
 .arrows {
-  grid-column: 2;
   display: flex;
-  gap: 14px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .arrow {
-  width: 46px;
-  height: 34px;
-  font-size: 22px;
-  line-height: 1;
+  width: 52px;
+  height: 38px;
+  display: grid;
+  place-items: center;
   cursor: pointer;
   color: #d8d9e4;
   background: var(--panel);
   border: 1px solid var(--edge);
   border-radius: 8px;
 }
-.arrow:hover  { background: #1d2130; border-color: #3a3f52; }
-.arrow:active { background: #262b3c; }
+.arrow svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.arrow:hover:not(:disabled)  { background: #1d2130; border-color: #3a3f52; }
+.arrow:active:not(:disabled) { background: #262b3c; }
 .arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.switch {
-  grid-column: 3;
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  user-select: none;
-  font-size: 14px;
-  color: var(--ink-2);
-  margin-left: 26px;
+/* Dead until a mode is armed. The arrows are the only way to turn anything, so
+   their state is the clearest possible answer to "can I do something yet".
+   Spelled out in real greys rather than as an opacity on the enabled style: at 0.32
+   over a near-black stage they faded into it and read as absent rather than as
+   waiting. They have to stay plainly visible to be plainly unavailable. */
+.arrow:disabled {
+  color: #7b8199;
+  background: #171a24;
+  border-color: #363b4d;
+  cursor: default;
 }
-.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+/* Armed: the accent edge says these are live now. */
+body.armed-mask .arrow,
+body.armed-wheel .arrow {
+  border-color: #4a3a86;
+  color: var(--ink);
+}
 
-.track {
-  width: 38px;
-  height: 21px;
-  border-radius: 11px;
-  background: var(--edge);
-  position: relative;
-  transition: background 0.15s;
+.segmented {
+  display: inline-flex;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  overflow: hidden;
 }
-.knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: #e6e2ff;
-  transition: left 0.15s;
+
+.seg, .reset {
+  font-family: inherit;
+  font-size: 13px;
+  height: 34px;
+  padding: 0 14px;
+  cursor: pointer;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
 }
-.switch input:checked + .track            { background: var(--accent); }
-.switch input:checked + .track .knob      { left: 19px; }
-.switch input:focus-visible + .track      { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg + .seg { border-left: 1px solid var(--edge); }
+.seg:hover, .reset:hover { color: var(--ink); background: #1d2130; }
+.seg:focus-visible, .reset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.seg[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Red, but the wheel's own red: hue 15 is sector 11, the crimson F sits in. The
+   lightness and chroma are the ring fills' — 0.30/0.075 is the minor ring, 0.42/0.10
+   is a touch past the major — so it reads as destructive without being louder than
+   anything on the disc. Real CSS, so oklch() resolves here; the same values would
+   not work as SVG presentation attributes. */
+.reset {
+  background: oklch(0.30 0.075 15);
+  border: 1px solid oklch(0.42 0.10 15);
+  border-radius: 8px;
+  color: oklch(0.90 0.09 15);
+  margin-top: 10px;      /* held back from the arrows — see .side */
+}
+.reset:hover {
+  background: oklch(0.37 0.10 15);
+  color: oklch(0.95 0.12 15);
+}
+
+/* Sits at the top of the control column, so it reads as a caption for everything
+   under it rather than as a status line off on its own. */
+.hint {
+  margin: 0;
+  max-width: 180px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+body.armed-mask .hint,
+body.armed-wheel .hint { color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- reading */
+/* The right column of the first screen: the short version, for someone looking at
+   the wheel right now. The long version is the second screen. */
+/* 245px is not a taste decision, and neither is the 76 in #wheel's height. At the
+   window this is built for (1366x768) the wheel is 692 wide and the widest staff,
+   swung round to 3 o'clock, reaches 43px past the box's own edge — to x=1072. This
+   column starts at 1095. Widen either and a staff crawls over the text mid-turn,
+   which it did at 722/255. The left column is nowhere near as tight: the controls
+   clear the same overrun by 140px. */
+.guide {
+  grid-column: 3;
+  justify-self: end;
+  max-width: 245px;
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.guide h2 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.guide p { margin: 0 0 10px; }
+.guide strong, .prose strong { color: #cfd0dc; font-weight: 500; }
+.more a {
+  color: #b9b4ff;
+  text-decoration: none;
+  font-size: 13px;
+}
+.more a:hover { text-decoration: underline; }
+
+.prose {
+  justify-content: center;
+  max-width: 760px;
+  margin: 0 auto;
+  font-size: 15px;
+  line-height: 1.68;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.prose h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 26px 0 8px;
+  color: var(--ink);
+}
+.prose h2:first-child { margin-top: 0; }
+.prose p { margin: 0 0 10px; }
+
+.chords {
+  border-collapse: collapse;
+  margin: 12px 0 14px;
+  font-size: 14px;
+}
+.chords th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink-3);
+  padding: 3px 18px 3px 0;
+}
+.chords td {
+  padding: 3px 16px 3px 0;
+  color: var(--ink);
+  min-width: 34px;
+}
+.chords .fn { color: var(--ink-3); }
+
+/* One column once the side columns can no longer hold their content. The wheel
+   stops being the centre of the window and becomes just the widest thing on a
+   page you scroll. */
+@media (max-width: 1000px) {
+  /* Back into the flow: with one column the controls run along the top, which is
+     exactly where the out-of-flow title was sitting. */
+  #wheel-screen h1 {
+    position: static;
+    margin-bottom: 14px;
+  }
+  .stage {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 14px;
+  }
+  .side, #wheel, .guide { grid-column: 1; }
+  .side {
+    flex-direction: row;
+    align-items: center;
+    justify-self: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+  }
+  .arrows { flex-direction: row; }
+  .hint { max-width: none; }
+  .reset { margin-top: 0; }
+  .guide { justify-self: center; max-width: 560px; }
+  #wheel { width: min(88vw, 62vh); }
+}
+
+/* --- the "this can turn" cues, on the wheel itself --- */
+/* Only ever one of these runs: the mask outline breathes, or the rim crawls. Both
+   are decorative overlays in the SVG; the colours they use are set in script.js. */
+.arm-glow { opacity: 0; }
+body.armed-mask .arm-glow {
+  animation: arm-breathe 1.7s ease-in-out infinite;
+}
+@keyframes arm-breathe {
+  0%, 100% { opacity: 0.06; }
+  50%      { opacity: 0.34; }
+}
+
+#arm-ring { opacity: 0; }
+body.armed-wheel #arm-ring {
+  opacity: 0.5;
+  animation: arm-ants 2.6s linear infinite;
+}
+/* one dash period is 24 units, so -48 loops seamlessly */
+@keyframes arm-ants {
+  to { stroke-dashoffset: -48; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.armed-mask .arm-glow  { animation: none; opacity: 0.28; }
+  body.armed-wheel #arm-ring { animation: none; }
+}
 
 /* --- SVG text --- */
 /* Everything inside the wheel — ring labels, the accidental counts and the hub
@@ -147,21 +364,3 @@ h1 {
 .staff { cursor: help; }
 .hub-sig { opacity: 0.92; }
 
-.legend {
-  max-width: 680px;
-  margin: 18px auto 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--ink-2);
-  text-align: center;
-  text-wrap: pretty;
-}
-.legend strong { color: #cfd0dc; font-weight: 600; }
-.legend code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  color: #b9b4ff;
-  background: rgba(123, 76, 255, 0.12);
-  border-radius: 3px;
-  padding: 0 3px;
-}

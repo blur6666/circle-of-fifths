@@ -304,20 +304,38 @@ function staffTitle(k, kind, n, both) {
    reach, so all twelve *start* at the same radius and hang outward as far as they
    individually need. The outer boundary comes out ragged; that is fine, it is on
    black, and it is the ragged edge that lets every staff be the same size. */
-const STAVES = KEYS.map((k, i) => {
-  const [kind, n, both] = staffPart(k);
-  const deg = i * SECTOR, th = deg * Math.PI / 180;
-  const w = staffW(kind, n, both) * STAFF_S, h = STAFF_H * STAFF_S;
+/* Top-left corner of a block of this size sitting at this angle. Called again for
+   every staff on every frame the wheel turns: a block keeps its size and its
+   upright-ness as it travels, so the radius that clears the rim is a function of
+   where it currently is, not of where it started. Pinning each one to its resting
+   radius instead would drive the wide ones 76 units into the disc by the time they
+   reached 3 o'clock; pushing every one out by its diagonal so it clears at any
+   angle would cost 15% of the disc's size, permanently, to buy clearance that only
+   matters mid-turn. So it is recomputed, and at rest this is exactly the old
+   layout. Mid-turn the wide ones swing out past the viewBox — see #wheel's
+   overflow in style.css. */
+function staffAt(w, h, deg) {
+  const th = deg * Math.PI / 180;
   const reach = w * Math.abs(Math.sin(th)) + h * Math.abs(Math.cos(th));
   const [cx, cy] = pt(R_OUT + STAFF_GAP + reach / 2, deg);
-  return { kind, n, both, w, h,
-           x: cx - w / 2, y: cy - h / 2,
+  return [cx - w / 2, cy - h / 2];
+}
+
+const STAVES = KEYS.map((k, i) => {
+  const [kind, n, both] = staffPart(k);
+  const deg = i * SECTOR;
+  const w = staffW(kind, n, both) * STAFF_S, h = STAFF_H * STAFF_S;
+  const [x, y] = staffAt(w, h, deg);
+  return { kind, n, both, w, h, deg, x, y,
            title: staffTitle(k, kind, n, both) };
 });
 
-/* How far the drawing actually reaches — the disc, or the corner of whichever staff
-   sticks out furthest. Corners matter: a block at 12 o'clock is pushed out by its
-   height but is wider than it is tall, so its corners beat its centre line. */
+/* How far the drawing actually reaches **at rest** — the disc, or the corner of
+   whichever staff sticks out furthest. Corners matter: a block at 12 o'clock is
+   pushed out by its height but is wider than it is tall, so its corners beat its
+   centre line. Turning the wheel can push a wide staff 12% further out than this,
+   sideways only (vertically the resting frame is never beaten); that is why the
+   element does not clip its overflow rather than why this number is bigger. */
 const R_RIM = SHOW_STAVES
   ? STAVES.reduce((m, s) => Math.max(m,
       Math.hypot(Math.max(Math.abs(s.x - CX), Math.abs(s.x + s.w - CX)),
@@ -386,7 +404,7 @@ function buildSpotlight(svg, defs) {
   // Purely decorative overlays, both of them. pointer-events off so they can't
   // swallow hover from the disc underneath — and so the veil's duplicate <title>
   // elements, copied wholesale out of #disc, can never fire a second tooltip.
-  const veil = el('use', {
+  el('use', {
     href: '#disc',
     'clip-path': 'url(#spot-outside)',
     filter: 'url(#spot-veil)',
@@ -396,6 +414,14 @@ function buildSpotlight(svg, defs) {
   const g = el('g', { id: 'mask', style: 'pointer-events: none' }, svg);
   el('path', {
     d: outside, 'fill-rule': 'evenodd', fill: C_STAGE, opacity: SCRIM_ALPHA
+  }, g);
+  /* The "you can turn this" cue for mask mode: the same window outline, drawn fat
+     and invisible underneath the real one, pulsed by CSS when body.armed-mask is
+     set. A separate element rather than an animation on the edge itself, so the
+     edge keeps its colour and bloom as JS constants. */
+  el('path', {
+    d: win, class: 'arm-glow', fill: 'none', stroke: C_MASK_EDGE,
+    'stroke-width': MASK_EDGE_W * 2.4, 'stroke-linejoin': 'round', opacity: 0
   }, g);
   el('path', {
     d: win, fill: 'none', stroke: C_MASK_EDGE,
@@ -412,10 +438,6 @@ function buildSpotlight(svg, defs) {
       const t = `rotate(${a} ${CX} ${CY})`;
       g.setAttribute('transform', t);
       shape.setAttribute('transform', t);
-    },
-    setVisible(on) {
-      g.style.display    = on ? '' : 'none';
-      veil.style.display = on ? '' : 'none';
     }
   };
 }
@@ -466,6 +488,13 @@ function draw() {
 
   el('circle', { cx: CX, cy: CY, r: R_OUT, fill: C_DISC }, bg);
 
+  /* Everything that must not turn over when the wheel does, with the point it
+     pivots about — its own anchor, not the centre. #disc gets rotate(a) and each of
+     these gets rotate(-a) about itself, so it travels round the circle but stays
+     the right way up. See setDisc() in wireControls. */
+  const uprights = [];
+  const upright = (node, ax, ay) => uprights.push({ node, ax, ay });
+
   KEYS.forEach((k, i) => {
     const mid = i * SECTOR;
     const a0 = mid - SECTOR / 2, a1 = mid + SECTOR / 2;
@@ -493,29 +522,29 @@ function draw() {
     };
     // the diminished ring is the narrowest band, so a dual name stacks rather than
     // running "F°/E♯°" across it and colliding with the seams
-    if (twoNames(k.dim)) textLines(labels, k.dim.split('/'), dimAttrs);
-    else                 text(labels, k.dim, dimAttrs);
+    upright(twoNames(k.dim) ? textLines(labels, k.dim.split('/'), dimAttrs)
+                            : text(labels, k.dim, dimAttrs), dmx, dmy);
 
     const [mnx, mny] = pt(R_MINOR_TEXT, mid);
-    text(labels, k.minor, {
+    upright(text(labels, k.minor, {
       x: mnx, y: mny, class: 'minor-label',
       'font-size': FS_MINOR(twoNames(k.minor)), fill: textMin(i)
-    });
+    }), mnx, mny);
 
     const [mjx, mjy] = pt(R_MAJOR_TEXT, mid);
-    text(labels, k.major, {
+    upright(text(labels, k.major, {
       x: mjx, y: mjy, class: 'major-label',
       'font-size': FS_MAJOR(twoNames(k.major)), fill: textMaj(i)
-    });
+    }), mjx, mjy);
 
     // --- the accidental count, when it is switched on. The staff itself is not
     // drawn here: it lives outside the disc, so it is placed after this loop.
     if (SHOW_COUNTS) {
       const [, count] = staffPart(k);
       const [nx, ny] = pt(R_SIG, mid);
-      text(labels, String(count), {
+      upright(text(labels, String(count), {
         x: nx, y: ny, class: 'count', 'font-size': 30, fill: ink(i)
-      });
+      }), nx, ny);
     }
   });
 
@@ -526,53 +555,164 @@ function draw() {
     }, strokes);
   });
 
-  // the key signatures, hung off the rim rather than boxed into a ring. Still
-  // inside #disc, so the spotlight dims and blurs them with everything else.
-  if (SHOW_STAVES) STAVES.forEach(s => staffImage(labels, s));
+  /* The key signatures, hung off the rim rather than boxed into a ring. They sit
+     *outside* #disc, in the fixed frame: they were never touched by the spotlight
+     anyway (the clip and the scrim both stop at R_OUT), and when the wheel turns
+     they have to move along their own path rather than simply ride round with it —
+     see staffAt. Being out of #disc also stops the blurred veil making a clipped-
+     away duplicate of all twelve. */
+  const stavesG = el('g', { id: 'staves' }, svg);
+  if (SHOW_STAVES) STAVES.forEach(s => { s.node = staffImage(stavesG, s); });
+
+  const placeStaves = a => {
+    if (!SHOW_STAVES) return;
+    for (const s of STAVES) {
+      const [x, y] = staffAt(s.w, s.h, s.deg + a);
+      s.node.setAttribute('x', x);
+      s.node.setAttribute('y', y);
+    }
+  };
 
   // the spotlight sits on top of the disc; the hub reads out over the lot
-  wireControls(buildSpotlight(svg, defs), buildHub(svg));
+  const spot = buildSpotlight(svg, defs);
+
+  /* The "you can turn this" cue for wheel mode — marching ants just inside the rim,
+     pulsed and crawled by CSS when body.armed-wheel is set. Outside #disc so the
+     spotlight leaves it alone and it isn't copied into the blurred veil, and after
+     it so the scrim doesn't dim the two thirds of it that fall outside the window. */
+  el('circle', {
+    id: 'arm-ring', cx: CX, cy: CY, r: R_OUT - 7,
+    fill: 'none', stroke: C_MASK_EDGE, 'stroke-width': 3,
+    'stroke-dasharray': '10 14', opacity: 0, style: 'pointer-events: none'
+  }, svg);
+
+  wireControls(spot, buildHub(svg), disc, uprights, placeStaves);
 }
 
 // ---------------------------------------------------------------- controls
-function wireControls(spot, showKey) {
-  let selected = 0;    // index into KEYS; 0 = C at the top
-  let current  = 0;    // angle actually drawn, in degrees
-  let raf = null;
+/* Two things can turn: the window (`mask`) or the disc under it (`wheel`). One at a
+   time, chosen by the segmented control, and *neither* until one is chosen — the
+   arrows are dead until then, which is what makes arming visible. Reset puts both
+   angles back to zero and disarms.
 
-  function glideTo(target) {
-    if (raf) cancelAnimationFrame(raf);
-    const from  = current;
-    const delta = ((target - from + 540) % 360) - 180;   // take the short way round
-    const start = performance.now();
-    const DUR   = 320;
+   Both angles are unbounded: they accumulate, so you can keep going round in either
+   direction forever and 390° is a different number from 30° even though it draws the
+   same. Only Reset normalises, so that "home" is one short spin away rather than
+   thirteen. */
+const DUR = 380;    // ms per step
 
-    const step = now => {
-      const t = Math.min(1, (now - start) / DUR);
-      const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-      current = from + delta * e;
-      spot.setAngle(current);
-      if (t < 1) raf = requestAnimationFrame(step);
-      else { current = ((target % 360) + 360) % 360; spot.setAngle(current); raf = null; }
-    };
-    raf = requestAnimationFrame(step);
+/* Overshoot and settle — the step runs past its mark by about 7% and is pulled back,
+   which reads as the wheel dropping into a detent. Standard easeOutBack; c1 is how
+   far it overshoots. No ease-in, so a click bites immediately. */
+const ease = t => {
+  const c1 = 1.45, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+};
+
+// nearest equivalent angle in (-180, 180], so Reset takes the short way home
+const norm = a => ((a % 360) + 540) % 360 - 180;
+
+function wireControls(spot, showKey, disc, uprights, placeStaves) {
+  const target = { mask: 0, wheel: 0 };   // where each layer is headed
+  const drawn  = { mask: 0, wheel: 0 };   // where each layer actually is
+  let raf  = null;
+  let mode = null;                        // null | 'mask' | 'wheel'
+
+  const hint  = document.getElementById('hint');
+  const segs  = [...document.querySelectorAll('[data-mode]')];
+  const steps = [...document.querySelectorAll('[data-step]')];
+
+  const HINTS = {
+    null:    'Choose what the arrows turn',
+    mask:    'The arrows turn the mask',
+    wheel:   'The arrows turn the wheel'
+  };
+
+  /* The disc turns; every label on it turns back about its own anchor by the same
+     amount, so it rides round the circle without going over on its head. The staves
+     aren't on the disc at all — they are walked round separately, because each has
+     to find its own radius as it goes. */
+  function setWheel(a) {
+    disc.setAttribute('transform', `rotate(${a} ${CX} ${CY})`);
+    const back = -a;
+    for (const u of uprights) {
+      u.node.setAttribute('transform', `rotate(${back} ${u.ax} ${u.ay})`);
+    }
+    placeStaves(a);
   }
 
-  document.querySelectorAll('[data-step]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selected = (selected + Number(btn.dataset.step) + KEYS.length) % KEYS.length;
-      showKey(selected);
-      glideTo(selected * SECTOR);
-    });
+  // which key the window is sitting over, once both layers are counted
+  const keyIndex = () =>
+    ((Math.round((target.mask - target.wheel) / SECTOR) % KEYS.length) + KEYS.length)
+      % KEYS.length;
+
+  function glide() {
+    if (raf) cancelAnimationFrame(raf);
+    const from = { ...drawn };
+    const to   = { ...target };
+    const movesMask  = from.mask  !== to.mask;
+    const movesWheel = from.wheel !== to.wheel;
+    if (!movesMask && !movesWheel) return;
+
+    const t0 = performance.now();
+    const tick = now => {
+      const t = Math.min(1, (now - t0) / DUR);
+      const e = t === 1 ? 1 : ease(t);
+      drawn.mask  = from.mask  + (to.mask  - from.mask)  * e;
+      drawn.wheel = from.wheel + (to.wheel - from.wheel) * e;
+      if (movesMask)  spot.setAngle(drawn.mask);
+      if (movesWheel) setWheel(drawn.wheel);
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else raf = null;
+    };
+    raf = requestAnimationFrame(tick);
+  }
+
+  /* Arming is shown in three places at once, because the whole point is that the
+     next move should be obvious: the chosen button lights, the arrows come alive,
+     and the thing that will move starts pulsing on the wheel itself. */
+  function setMode(next) {
+    mode = next;
+    segs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    steps.forEach(b => { b.disabled = !mode; });
+    document.body.classList.toggle('armed-mask',  mode === 'mask');
+    document.body.classList.toggle('armed-wheel', mode === 'wheel');
+    hint.textContent = HINTS[mode];
+  }
+
+  /* One step of a twelfth. The arrows always mean "next key / previous key", so in
+     wheel mode the disc turns the other way to bring that key up to the window. */
+  function step(dir) {
+    if (!mode) return;
+    if (mode === 'mask') target.mask  += dir * SECTOR;
+    else                 target.wheel -= dir * SECTOR;
+    showKey(keyIndex());
+    glide();
+  }
+
+  steps.forEach(btn =>
+    btn.addEventListener('click', () => step(Number(btn.dataset.step))));
+
+  // clicking the armed button disarms it, so "neither" is reachable without Reset
+  segs.forEach(btn =>
+    btn.addEventListener('click', () =>
+      setMode(mode === btn.dataset.mode ? null : btn.dataset.mode)));
+
+  document.getElementById('reset').addEventListener('click', () => {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    // wind the accumulated turns off first, so home is at most half a turn away
+    drawn.mask  = norm(drawn.mask);
+    drawn.wheel = norm(drawn.wheel);
+    target.mask = target.wheel = 0;
+    setMode(null);
+    showKey(0);
+    glide();
   });
 
-  const toggle = document.getElementById('mask-toggle');
-  const show = () => spot.setVisible(toggle.checked);
-  toggle.addEventListener('change', show);
-
   spot.setAngle(0);
+  setWheel(0);
+  setMode(null);
   showKey(0);
-  show();
 }
 
 draw();

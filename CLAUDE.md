@@ -79,16 +79,22 @@ them illegibly small. They are now placed outside the disc and are free to overr
 it; there is no containing ring any more (`SHOW_KEY_SIGNATURES` is off, because the
 band existed only to hold them and was left an empty ring of colour).
 
-Placement is precomputed into `STAVES` before anything is drawn, because the viewBox
-has to be framed around it. Each staff is upright while the rim curves away beneath
-it, so a block covers a different amount of radius depending where it sits — height
-at 12 o'clock, full width at 3. Putting every centre on one circle would shove the
-7-sharp one back over the major ring and into its label, so instead **each is pushed
-out by half its own reach**: all twelve start at the same radius and hang outward as
-far as they individually need. The outer boundary is therefore ragged. That is the
-price of uniform size, and it is paid on black where it doesn't show.
+Resting placement is precomputed into `STAVES` before anything is drawn, because the
+viewBox has to be framed around it. Each staff is upright while the rim curves away
+beneath it, so a block covers a different amount of radius depending where it sits —
+height at 12 o'clock, full width at 3. Putting every centre on one circle would shove
+the 7-sharp one back over the major ring and into its label, so instead **each is
+pushed out by half its own reach**: all twelve start at the same radius and hang
+outward as far as they individually need. The outer boundary is therefore ragged.
+That is the price of uniform size, and it is paid on black where it doesn't show.
 
-`R_RIM` is how far the drawing actually reaches, corners included. It frames the
+`staffAt(w, h, deg)` is that calculation, and it is a *function of the current
+angle*, not of the sector — because the wheel turns now. See below.
+
+The staves are drawn in `<g id="staves">`, **outside `#disc`**, and are walked round
+by `placeStaves()` rather than riding the disc's transform.
+
+`R_RIM` is how far the drawing reaches **at rest**, corners included. It frames the
 viewBox and **nothing else** — in particular the spotlight stops at the disc edge and
 takes no account of the staves, so they are never dimmed, blurred or lit whichever
 key is selected. That is deliberate; don't wire the mask back out to `R_RIM`.
@@ -101,6 +107,29 @@ only lever; there is no free legibility here.
 if `staves/` is ever cleared — an `<image>` at a missing URL draws Chrome's
 broken-image icon, twelve of them round the wheel — and don't put a text stand-in
 back in there instead.
+
+### What turning the wheel did to them
+
+A staff placed for 6 o'clock is 248 units wide and 99 tall; carry it round to 3
+o'clock without moving it outward and it digs **76 units into the disc**, straight
+over the major label. Three ways out, and the numbers decided it:
+
+- pin every staff at the radius that clears at *any* angle (half its diagonal) —
+  correct at all times, but the viewBox has to grow to suit and the coloured disc
+  loses **15.4% of its size, permanently**, to buy clearance that only matters
+  while something is moving. Rejected.
+- recompute the radius from the angle it is currently at — at rest this is
+  byte-for-byte the old layout, and the wide ones only swing out mid-turn. Chosen.
+- swap the images between fixed slots instead of moving them. Rejected: the swap is
+  a jump, and the rings are gliding.
+
+So mid-turn a staff can reach 12% further out than `R_RIM` allows for. Measured, and
+it is **sideways only** — the resting frame is never beaten vertically, because a
+block pointing its width outward is at 3 or 9 o'clock by definition. `#wheel` is
+therefore `overflow: visible`, and the excess paints onto stage-coloured page
+background either side. Don't "fix" that by growing the viewBox; that is the 15.4%
+above. Two neighbouring staves can also touch briefly while they slide, since each
+finds its own radius at its own rate. Transient, on black, left alone.
 
 ## No enharmonic sectors any more
 
@@ -182,25 +211,114 @@ sends the mask sliding off-centre as it turns. The clipPath's child path takes t
 *same* transform on every frame — if only the mask group turns, the lit region and
 the outline drift apart.
 
-Arrows above and below the wheel step it by one fifth; a switch toggles it (which
-hides the veil as well as the scrim, so the whole wheel goes sharp). The hub reads
-out whichever key the window is on, with its accidental count under it.
+The spotlight is always on. The switch that used to hide it is gone — it was there
+before the wheel could turn, and once "turn the mask" became one of two modes, a
+control that removed the mask was answering a question nobody asked.
 
 How it is meant to be read: usually the *middle* major cell, or the middle minor
 cell, is the root of the key — the rest of the window is that key's other chords.
 There are other uses the owner hasn't detailed.
 
+## Two things can turn
+
+The window can move over a still wheel, or the wheel can turn under a still window —
+the second being what a physical cardboard wheel does. One at a time, and **neither
+until you pick one**: `mode` is `null | 'mask' | 'wheel'` and the arrows are
+`disabled` until it isn't null. That is the point, not an oversight — the dead
+arrows are what make arming visible.
+
+Angles accumulate and are never wrapped, so you can keep going round either way
+forever and 390° is a different number from 30°. Only Reset normalises, via `norm()`,
+so home is at most half a turn away rather than however many the user racked up.
+
+Each press is one twelfth. The arrows are stacked vertically and point up and down —
+up is the previous key, down the next, the way a list scrolls. In wheel mode the disc
+turns the opposite way to bring that key up to the window. `keyIndex()` reads the hub
+off the difference between the two angles, so it stays right however you mix modes.
+
+`ease()` is easeOutBack: no ease-in, so the click bites at once, then ~7% past the
+mark and pulled back. That overshoot is the whole feel — it reads as dropping into a
+detent. `c1` is how far it goes over.
+
+### Arming is signalled three times over
+
+Because the request was specifically that the user can see the next move is
+available and know how to make it: the chosen segment lights, the arrows come alive,
+and the thing that will actually move starts pulsing **on the wheel itself** —
+`body.armed-mask` breathes `.arm-glow` (a fat invisible copy of the window outline,
+under the real one) and `body.armed-wheel` crawls `#arm-ring` (marching ants just
+inside the rim). A hint line above the picker says which in words. Both cues are
+CSS animations on elements whose colours still come from the JS constants; the fat
+copy exists so the real edge keeps its own colour and bloom untouched.
+
+Disabled arrows are spelled out in real greys (`#7b8199` on `#171a24`), not as an
+opacity on the enabled style. At `opacity: 0.32` over a near-black stage they sank
+into it and read as *absent* rather than as *waiting*, which is the opposite of the
+point — they have to stay plainly visible to be plainly unavailable.
+
+Reset returns the lot to a fresh load — verified pixel-identical — and disarms. It is
+the one control that isn't grey: it borrows **hue 15**, which is sector 11's, the
+crimson F is drawn in, at the ring fills' own lightness and chroma. Any "red" on this
+page should come out of the wheel's twelve hues rather than off a generic palette.
+
+### Labels stay upright while the wheel turns
+
+`#disc` takes `rotate(a)`; every label on it takes `rotate(-a)` about **its own
+anchor**, so it travels round the circle without going over on its head. The list is
+built during `draw()` by `upright()`. This keeps the wheel's oldest rule ("all text
+stays upright") rather than copying the cardboard wheel literally, because the type
+here is already at the edge of legible — see Sizing. The staves are handled
+separately and are not in that list; see the staves section.
+
+Two things this costs: the veil is a filtered `<use>` of a `#disc` that now moves,
+so it re-filters every frame instead of once, and 36 labels get a `setAttribute` per
+frame. Both fine at this size, but that is the budget if anything else wants adding
+to the rotating group.
+
+## Two screens
+
+The page is two sections, each `min-height: 100vh`. The first is the instrument and
+nothing else; the second is the reading of it, in prose. A link at the foot of the
+right-hand column is the only thing pointing down — without it the second screen is
+invisible.
+
+Screen one is three grid columns, `1fr auto 1fr`:
+
+- **left** — the whole control column, at the window's vertical midpoint and hard
+  against the left edge: hint, mode picker, the two arrows stacked, then Reset held
+  back a little so it can't be hit by accident.
+- **middle** — the wheel.
+- **right** — `How to read it`, the short version.
+
+`1fr auto 1fr` puts the wheel in the middle of the **window**, not of the leftovers.
+That is the point of the layout, and it means the two side columns are equal by
+construction — you cannot give the guide more room than the controls without moving
+the wheel off centre. Under 1000px it all collapses to one column.
+
+The title is `position: absolute` in the top-left corner. In flow it pushed the wheel
+down by its own height, and the wheel is sized off whatever height is left, so it was
+costing ~55px of diameter to sit in a corner that is empty anyway.
+
 ## Sizing
 
-`#wheel` is capped by width, by 950px, and by `100vh - 132px` so the wheel plus both
-arrow rows fit one screen. On a 1366x768 Chromebook that lands the wheel near 505px,
-and everything in the SVG is in user units scaled by that — the wheel's viewBox is
-1012 wide, so a size of *n* user units renders at about *n*/2 px.
+`#wheel` is `min(100vh - 76px, 58vw)`. Only 42 of that 76 is real chrome (the
+screen's top and bottom padding); the other 34 buys clearance on the right — see
+below. Everything in the SVG is in user units scaled by that: the viewBox is 1166
+wide, so *n* user units render at roughly *n*/1.7 px on a 1366x768 screen. That is
+about 20% more than before the layout moved, when the wheel shared a column with the
+title and two rows of controls.
+
+**The guide's width and the wheel's height are one constraint, not two.** At
+1366x768 the wheel is 692 wide, and the widest key signature swung round to 3
+o'clock reaches 43px past the box's own edge, to x=1072; the guide starts at 1095.
+At 722/255 a staff crawled over the text mid-turn — seen, not theorised. Widening
+one means shrinking the other. The left column has no such problem: the controls
+clear the same overrun by 140px.
 
 This is what killed the old lettered box grids: their letters were 1% of the wheel's
 width, i.e. ~5px on screen, and no font-size could fix it because the signature band
-is only 9% of the radius. Reclaiming the whole 132px of page chrome would only buy
-~18%. Staff PNGs sidestep it — hairlines and accidental glyphs stay legible at a
+is only 9% of the radius. The layout has since bought most of the room there was to
+buy and it still would not be enough. Staff PNGs sidestep it — hairlines and accidental glyphs stay legible at a
 size where fifteen letters in boxes never could. Keep that in mind before adding
 anything else text-shaped to the outer ring.
 
@@ -221,6 +339,13 @@ gone; the outer ring is wired to place staff PNGs and sits empty until they arri
 
 The staves are in and on — real LilyPond artwork, converted and placed, fitting
 inside the band at every sector.
+
+Wheel rotation is in: mask-or-wheel mode picker, armed cues, unlimited stepping
+either way with an overshoot snap, and Reset. See "Two things can turn".
+
+The page has been rebuilt around it — two full-height screens, title in the corner,
+controls down the left, the wheel given the whole middle of the window, and the
+reading of it on the right and on screen two. See "Two screens".
 
 **Now: the type pass.** Sizes and label colours have had one round — bigger, and
 brighter through the middle. Still open: the page moved to Roboto, which has no ♯

@@ -12,29 +12,94 @@
 </head>
 <body>
 
-<h1>The Circle of Fifths</h1>
+<!-- Two full-height screens. The first is the instrument and nothing else; the
+     second is the reading of it. -->
+<section class="screen" id="wheel-screen">
+  <h1>The Circle of Fifths</h1>
 
-<div class="controls">
-  <div class="arrows">
-    <button class="arrow" data-step="-1" aria-label="Previous key">&lsaquo;</button>
-    <button class="arrow" data-step="1" aria-label="Next key">&rsaquo;</button>
+  <!-- Left column, wheel, right column. The wheel is in the middle of the *window*,
+       not of what's left over, so the two side columns are equal by construction. -->
+  <div class="stage">
+
+    <div class="side">
+      <p class="hint" id="hint" role="status"></p>
+
+      <div class="segmented" role="group" aria-label="What the arrows turn">
+        <button class="seg" data-mode="mask"  aria-pressed="false">Mask</button>
+        <button class="seg" data-mode="wheel" aria-pressed="false">Wheel</button>
+      </div>
+
+      <div class="arrows">
+        <button class="arrow" data-step="-1" aria-label="Previous key">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg>
+        </button>
+        <button class="arrow" data-step="1" aria-label="Next key">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+
+      <button class="reset" id="reset">Reset</button>
+    </div>
+
+    <svg id="wheel" xmlns="http://www.w3.org/2000/svg"
+         role="img" aria-label="Circle of fifths chart"></svg>
+
+    <aside class="guide">
+      <h2>How to read it</h2>
+      <p>Four rings, one key per slice. Outward from the middle: the
+        <strong>diminished</strong> chord, the <strong>relative minor</strong>, the
+        <strong>major</strong>, and the real <strong>key signature</strong> on a staff.</p>
+      <p>The lit window is one whole key. Its middle major cell is the key itself; the
+        seven cells inside it are the only chords that key uses.</p>
+      <p>Neighbours are a fifth apart, so the closer two keys sit, the more notes they
+        share. Opposite sides of the wheel are as far apart as music gets.</p>
+      <p class="more"><a href="#about-screen">All of it, at length ↓</a></p>
+    </aside>
+
   </div>
-  <label class="switch">
-    <input type="checkbox" id="mask-toggle" checked>
-    <span class="track"><span class="knob"></span></span>
-    <span class="switch-text">Mask</span>
-  </label>
-</div>
+</section>
 
-<svg id="wheel" xmlns="http://www.w3.org/2000/svg"
-     role="img" aria-label="Circle of fifths chart"></svg>
+<section class="screen prose" id="about-screen">
+  <h2>Working it</h2>
+  <p>Nothing turns until you say what should. <strong>Mask</strong> slides the window
+    over a wheel that stays put; <strong>Wheel</strong> turns the wheel under a window
+    that stays put, the way a cardboard one does. Once armed, the arrows come alive and
+    the thing that will move starts pulsing — the window outline breathes, or the rim
+    crawls. One press is one slice, either direction, for as long as you like.
+    <strong>Reset</strong> puts C back on top and disarms.</p>
+  <p>The centre always reads out the key the window is on, with its accidental count
+    under it. Hovering a staff names its key and spells out every sharp or flat in it.</p>
 
-<div class="controls">
-  <div class="arrows">
-    <button class="arrow" data-step="-1" aria-label="Previous key">&lsaquo;</button>
-    <button class="arrow" data-step="1" aria-label="Next key">&rsaquo;</button>
-  </div>
-</div>
+  <h2>The window is a key</h2>
+  <p>Three slices wide over the major and minor rings, one slice over the diminished
+    ring — and that is not a decorative shape. It is exactly the seven chords built on
+    a major scale, and no others. With C in the middle:</p>
+  <table class="chords">
+    <tr><th>major ring</th><td>F</td><td>C</td><td>G</td><td class="fn">IV · I · V</td></tr>
+    <tr><th>minor ring</th><td>d</td><td>a</td><td>e</td><td class="fn">ii · vi · iii</td></tr>
+    <tr><th>diminished</th><td colspan="3">B°</td><td class="fn">vii°</td></tr>
+  </table>
+  <p>So the window is a chord palette. Move it one slice and every chord in it changes
+    to the next key's, which is why writing that wanders round the circle sounds like it
+    is going somewhere rather than jumping.</p>
+
+  <h2>The rings</h2>
+  <p><strong>Major</strong> — the key. Clockwise is up a fifth and one more sharp;
+    anticlockwise is down a fifth and one more flat.</p>
+  <p><strong>Relative minor</strong> — the minor key sharing that signature. A minor
+    and C major are the same seven notes started in different places.</p>
+  <p><strong>Diminished</strong> — the chord on the seventh degree, the restless one
+    that wants to fall back to the key.</p>
+  <p><strong>Key signature</strong> — a real engraved staff rather than a count, so you
+    read the sharps and flats where they actually sit. Every one is drawn at the same
+    size, which is why the outer edge is ragged: each hangs out as far as its own width
+    needs.</p>
+
+  <h2>The one slice with two names</h2>
+  <p>Six sharps and six flats are the same pitches under different names, so that slice
+    carries both — <strong>G♭/F♯</strong> — and its staff shows both signatures. The
+    rest of the wheel commits to one spelling each.</p>
+</section>
 
 <script src="script.js"></script>
 </body>
