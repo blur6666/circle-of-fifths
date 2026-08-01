@@ -44,3 +44,22 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 // DONE 18. About the mouse spinning: The disk is magnetized in positions that fit it correctly in the mask. It is a strong effect, but while the user is dragging, the effect temporarily concedes.
 
 // DONE 19. (after everything  priority) Review whole project. document features for humands in README.md for robots in whatever .md you kids robots put your diaries.
+
+20. Checkbox to disable all glow
+    - Checkbox to disable mask glow
+    - checkbox to disable disk glow (inner and outter)
+
+21. Metronomes: I will have to explain. Dont bother until them. Note to self:  
+
+22. Home screen house keeping: Adds in the home screen, options to:
+    - Hides the spin menu to the left (becomes a box with a [>])
+    - Hides metronome ([<])
+    - Hides tutorial forever: checkbox and byebye. COokie, localstorage whatever
+    - Hides Relevant info
+    - FEATURE: after hiding everything. an option: "ULTRA CIRCLE" appears -> Makes it so big that you cant even see the claves in the upper and lower ends. Button to reset
+
+23. DOes that text later on the page even makes sense? Is it fully correct?  You guys cant even understand a metronoome 😂jkjk
+
+24. Background is an obvious repeating texture, lets make it better. maybe even procedural
+
+25. 
