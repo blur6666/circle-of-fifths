@@ -103,12 +103,16 @@ h1 {
    from the rest so it can't be hit by accident. */
 .side {
   grid-column: 1;
-  justify-self: start;
+  justify-self: end;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  max-width: 100%;
+  max-width: 180px;
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
 }
 
 .arrows {
@@ -118,8 +122,8 @@ h1 {
 }
 
 .arrow {
-  width: 52px;
-  height: 38px;
+  padding:0;
+  height: 50px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -205,6 +209,23 @@ body.armed-wheel .arrow {
   color: oklch(0.95 0.12 15);
 }
 
+.move-mask {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+.move-mask input {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
 /* Sits at the top of the control column, so it reads as a caption for everything
    under it rather than as a status line off on its own. */
 .hint {
@@ -228,7 +249,7 @@ body.armed-wheel .hint { color: var(--ink-2); }
    clear the same overrun by 140px. */
 .guide {
   grid-column: 3;
-  justify-self: end;
+  justify-self: start;
   max-width: 245px;
   font-size: 13px;
   line-height: 1.62;
@@ -311,7 +332,7 @@ body.armed-wheel .hint { color: var(--ink-2); }
     gap: 14px;
   }
   .arrows { flex-direction: row; }
-  .hint { max-width: none; }
+  .hint { max-width: none; display:none; }
   .reset { margin-top: 0; }
   .guide { justify-self: center; max-width: 560px; }
   #wheel { width: min(88vw, 62vh); }
@@ -320,19 +341,30 @@ body.armed-wheel .hint { color: var(--ink-2); }
 /* --- the "this can turn" cues, on the wheel itself --- */
 /* Only ever one of these runs: the mask outline breathes, or the rim crawls. Both
    are decorative overlays in the SVG; the colours they use are set in script.js. */
-.arm-glow { opacity: 0; }
-body.armed-mask .arm-glow {
-  animation: arm-breathe 1.7s ease-in-out infinite;
+.arm-glow {
+  opacity: 0;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 320ms linear;
+  filter: drop-shadow(0 0 8px rgba(150, 120, 255, 0.8))
+          drop-shadow(0 0 22px rgba(150, 120, 255, 0.45));
 }
-@keyframes arm-breathe {
-  0%, 100% { opacity: 0.06; }
-  50%      { opacity: 0.34; }
+body.armed-mask .arm-glow {
+  opacity: 0.12;
 }
 
-#arm-ring { opacity: 0; }
+#arm-ring {
+  opacity: 0;
+  stroke-width: 3;
+}
 body.armed-wheel #arm-ring {
-  opacity: 0.5;
-  animation: arm-ants 2.6s linear infinite;
+  opacity: 0.72;
+  animation: arm-ring-pulse 2.6s ease-in-out infinite,
+             arm-ants 2.6s linear infinite;
+}
+@keyframes arm-ring-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.92; }
 }
 /* one dash period is 24 units, so -48 loops seamlessly */
 @keyframes arm-ants {
@@ -340,8 +372,8 @@ body.armed-wheel #arm-ring {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.armed-mask .arm-glow  { animation: none; opacity: 0.28; }
-  body.armed-wheel #arm-ring { animation: none; }
+  body.armed-mask .arm-glow  { opacity: 0.45; }
+  body.armed-wheel #arm-ring { animation: none; opacity: 0.72; }
 }
 
 /* --- SVG text --- */

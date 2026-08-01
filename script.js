@@ -128,16 +128,14 @@ const SCRIM_ALPHA = 0.31;
    the window, saturation drops by a third. */
 const SPOT_BLUR   = 0;      // feGaussianBlur, in user units
 const SPOT_SAT    = 0.90;   // saturation kept outside the window
-/* The window's edge is a solid grey, not a translucent white. It runs straight over
-   the stage-coloured seams between sectors, and at 0.85 those showed through and
-   left the line looking dirty and uneven along its length. This is roughly what the
-   translucent version composited to over the dark, but it now reads the same
-   wherever it crosses. */
-const C_MASK_EDGE = '#c1c4d6';
+/* The window's edge reads as a bright, deliberate highlight rather than a soft
+   grey hairline. That keeps it readable when the wheel is otherwise dark and busy,
+   and it gives the arm cue a target that can be seen from a glance. */
+const C_MASK_EDGE = '#f5f6ff';
 const MASK_EDGE_A = 1;
-const MASK_EDGE_W = 4.6;    // the window's hairline, in user units
-const C_MASK_GLOW = 'rgba(150,120,255,.75)';
-const MASK_GLOW_R = 21;
+const MASK_EDGE_W = 5.2;    // the window's hairline, in user units
+const C_MASK_GLOW = 'rgba(160,125,255,.92)';
+const MASK_GLOW_R = 24;
 
 // ------------------------------------------------------------------ helpers
 function pt(r, deg) {
@@ -416,10 +414,10 @@ function buildSpotlight(svg, defs) {
     d: outside, 'fill-rule': 'evenodd', fill: C_STAGE, opacity: SCRIM_ALPHA
   }, g);
   /* The "you can turn this" cue for mask mode: the same window outline, drawn fat
-     and invisible underneath the real one, pulsed by CSS when body.armed-mask is
+     and invisible underneath the real one, pulsed by JS when body.armed-mask is
      set. A separate element rather than an animation on the edge itself, so the
      edge keeps its colour and bloom as JS constants. */
-  el('path', {
+  const armGlow = el('path', {
     d: win, class: 'arm-glow', fill: 'none', stroke: C_MASK_EDGE,
     'stroke-width': MASK_EDGE_W * 2.4, 'stroke-linejoin': 'round', opacity: 0
   }, g);
@@ -428,6 +426,9 @@ function buildSpotlight(svg, defs) {
     'stroke-width': MASK_EDGE_W, 'stroke-linejoin': 'round', opacity: MASK_EDGE_A,
     style: `filter: drop-shadow(0 0 ${MASK_GLOW_R}px ${C_MASK_GLOW})`
   }, g);
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let pulse = null;
 
   return {
     /* The mask is placed with the SVG rotate(angle cx cy) attribute rather than a
@@ -438,6 +439,27 @@ function buildSpotlight(svg, defs) {
       const t = `rotate(${a} ${CX} ${CY})`;
       g.setAttribute('transform', t);
       shape.setAttribute('transform', t);
+    },
+    setArmed(armed) {
+      if (!armed) {
+        if (pulse) clearInterval(pulse);
+        pulse = null;
+        armGlow.style.opacity = '0';
+        return;
+      }
+      if (prefersReducedMotion) {
+        if (pulse) clearInterval(pulse);
+        pulse = null;
+        armGlow.style.opacity = '0.45';
+        return;
+      }
+      if (pulse) return;
+      let on = true;
+      armGlow.style.opacity = '0.12';
+      pulse = setInterval(() => {
+        on = !on;
+        armGlow.style.opacity = on ? '0.95' : '0.12';
+      }, 700);
     }
   };
 }
@@ -619,11 +641,10 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   let mode = null;                        // null | 'mask' | 'wheel'
 
   const hint  = document.getElementById('hint');
-  const segs  = [...document.querySelectorAll('[data-mode]')];
+  const moveMask = document.getElementById('move-mask');
   const steps = [...document.querySelectorAll('[data-step]')];
 
   const HINTS = {
-    null:    'Choose what the arrows turn',
     mask:    'The arrows turn the mask',
     wheel:   'The arrows turn the wheel'
   };
@@ -673,10 +694,11 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
      and the thing that will move starts pulsing on the wheel itself. */
   function setMode(next) {
     mode = next;
-    segs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    if (moveMask) moveMask.checked = mode === 'mask';
     steps.forEach(b => { b.disabled = !mode; });
     document.body.classList.toggle('armed-mask',  mode === 'mask');
     document.body.classList.toggle('armed-wheel', mode === 'wheel');
+    spot.setArmed(mode === 'mask');
     hint.textContent = HINTS[mode];
   }
 
@@ -693,10 +715,11 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   steps.forEach(btn =>
     btn.addEventListener('click', () => step(Number(btn.dataset.step))));
 
-  // clicking the armed button disarms it, so "neither" is reachable without Reset
-  segs.forEach(btn =>
-    btn.addEventListener('click', () =>
-      setMode(mode === btn.dataset.mode ? null : btn.dataset.mode)));
+  if (moveMask) {
+    moveMask.addEventListener('change', () => {
+      setMode(moveMask.checked ? 'mask' : 'wheel');
+    });
+  }
 
   document.getElementById('reset').addEventListener('click', () => {
     if (raf) { cancelAnimationFrame(raf); raf = null; }
@@ -704,14 +727,14 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     drawn.mask  = norm(drawn.mask);
     drawn.wheel = norm(drawn.wheel);
     target.mask = target.wheel = 0;
-    setMode(null);
+    setMode(moveMask && moveMask.checked ? 'mask' : 'wheel');
     showKey(0);
     glide();
   });
 
   spot.setAngle(0);
   setWheel(0);
-  setMode(null);
+  setMode('wheel');
   showKey(0);
 }
 

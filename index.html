@@ -22,23 +22,30 @@
   <div class="stage">
 
     <div class="side">
-      <p class="hint" id="hint" role="status"></p>
-
-      <div class="segmented" role="group" aria-label="What the arrows turn">
-        <button class="seg" data-mode="mask"  aria-pressed="false">Mask</button>
-        <button class="seg" data-mode="wheel" aria-pressed="false">Wheel</button>
-      </div>
-
+      <p>Spin the Circle!</p>
       <div class="arrows">
         <button class="arrow" data-step="-1" aria-label="Previous key">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <g transform="translate(0 -8)"><polyline points="6 15 12 9 18 15"/></g>
+            <g transform="translate(0 0)"><polyline points="6 15 12 9 18 15"/></g>
+            <g transform="translate(0 8)"><polyline points="6 15 12 9 18 15"/></g>
+          </svg>
         </button>
         <button class="arrow" data-step="1" aria-label="Next key">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <g transform="translate(0 -8)"><polyline points="6 9 12 15 18 9"/></g>
+            <g transform="translate(0 0)"><polyline points="6 9 12 15 18 9"/></g>
+            <g transform="translate(0 8)"><polyline points="6 9 12 15 18 9"/></g>
+          </svg>
         </button>
       </div>
 
       <button class="reset" id="reset">Reset</button>
+
+      <label class="move-mask" for="move-mask">
+        <input id="move-mask" type="checkbox">
+        <span>Move mask instead</span>
+      </label>
     </div>
 
     <svg id="wheel" xmlns="http://www.w3.org/2000/svg"
