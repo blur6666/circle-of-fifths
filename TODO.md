@@ -40,3 +40,5 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 // DONE 16. Create a background themed in space. It should be very dark, the same color as today, with little movement.
 
 // DONE 17. The metronome movement is completely incorrect. Use your tools to see it and use your web search to read and see how a metronome works. Fix the animation.
+
+// DONE 18. About the mouse spinning: The disk is magnetized in positions that fit it correctly in the mask. It is a strong effect, but while the user is dragging, the effect temporarily concedes.

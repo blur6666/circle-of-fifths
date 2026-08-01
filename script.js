@@ -713,8 +713,21 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     const dx = evt.clientX - drag.lastX;
     drag.lastX = evt.clientX;
     const deg = dx * 0.45;
-    if (mode === 'mask') target.mask += deg;
-    else target.wheel -= deg;
+    if (drag.layer === 'mask') {
+      target.mask += deg;
+      drawn.mask = target.mask;
+      spot.setAngle(drawn.mask);
+    } else {
+      target.wheel -= deg;
+      drawn.wheel = target.wheel;
+      setWheel(drawn.wheel);
+    }
+    showKey(keyIndex());
+  }
+
+  function settleDrag() {
+    const layer = drag.layer;
+    target[layer] = Math.round(target[layer] / SECTOR) * SECTOR;
     showKey(keyIndex());
     glide();
   }
@@ -725,18 +738,25 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   if (wheelSvg) {
     wheelSvg.addEventListener('pointerdown', evt => {
       if (!mode) return;
-      drag = { pointerId: evt.pointerId, lastX: evt.clientX };
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = null;
+      }
+      target[mode] = drawn[mode];
+      drag = { pointerId: evt.pointerId, lastX: evt.clientX, layer: mode };
       wheelSvg.setPointerCapture(evt.pointerId);
     });
     wheelSvg.addEventListener('pointermove', dragSpin);
     wheelSvg.addEventListener('pointerup', evt => {
       if (!drag || evt.pointerId !== drag.pointerId) return;
       wheelSvg.releasePointerCapture(evt.pointerId);
+      settleDrag();
       drag = null;
     });
     wheelSvg.addEventListener('pointercancel', evt => {
       if (!drag || evt.pointerId !== drag.pointerId) return;
       try { wheelSvg.releasePointerCapture(evt.pointerId); } catch {}
+      settleDrag();
       drag = null;
     });
   }
