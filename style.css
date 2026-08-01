@@ -62,6 +62,11 @@ body {
 .metronome-bpm input {
   accent-color: var(--accent);
 }
+#metronome-bpm-value {
+  min-width: 2ch;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
 .metronome-visual {
   position: relative;
   width: 56px;
@@ -86,6 +91,7 @@ body {
   background: linear-gradient(90deg, #d1d5ef, #7b4cff);
   transform-origin: 34px 50%;
   transform: rotate(-18deg);
+  transition: transform 140ms ease-in-out;
 }
 .metronome-weight {
   position: absolute;
@@ -95,13 +101,6 @@ body {
   height: 14px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #a7a9c4, #4c5064);
-}
-body.metronome-on .metronome-arm {
-  animation: metronome-swing var(--metronome-duration, 0.9s) ease-in-out infinite;
-}
-@keyframes metronome-swing {
-  0%, 100% { transform: rotate(-18deg); }
-  50% { transform: rotate(18deg); }
 }
 
 h1 {

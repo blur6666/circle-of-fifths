@@ -763,12 +763,46 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     });
   }
   if (metronomeToggle && metronomeBpm) {
+    const arm = document.querySelector('.metronome-arm');
+    const bpmValue = document.getElementById('metronome-bpm-value');
+    let metronomeTimer = null;
+    let swingSide = -1;
+
+    const setArmAngle = angle => {
+      if (arm) arm.style.transform = `rotate(${angle}deg)`;
+    };
+
+    const stopMetronome = () => {
+      if (metronomeTimer) {
+        clearInterval(metronomeTimer);
+        metronomeTimer = null;
+      }
+      document.body.classList.remove('metronome-on');
+      setArmAngle(-18);
+    };
+
     const syncMetronome = () => {
       const bpm = Number(metronomeBpm.value) || 72;
-      const duration = Math.max(0.3, 60 / bpm);
-      document.body.classList.toggle('metronome-on', metronomeToggle.checked);
-      document.body.style.setProperty('--metronome-duration', `${duration}s`);
+      const beatMs = Math.max(333, Math.round(60000 / bpm));
+      if (bpmValue) bpmValue.textContent = String(bpm);
+      document.body.style.setProperty('--metronome-duration', `${beatMs}ms`);
+
+      if (!metronomeToggle.checked) {
+        stopMetronome();
+        return;
+      }
+
+      document.body.classList.add('metronome-on');
+      if (metronomeTimer) clearInterval(metronomeTimer);
+      swingSide = -1;
+      setArmAngle(-18);
+
+      metronomeTimer = setInterval(() => {
+        swingSide *= -1;
+        setArmAngle(swingSide < 0 ? -18 : 18);
+      }, beatMs);
     };
+
     metronomeToggle.addEventListener('change', syncMetronome);
     metronomeBpm.addEventListener('input', syncMetronome);
     syncMetronome();
