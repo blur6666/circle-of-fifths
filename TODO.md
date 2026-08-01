@@ -39,4 +39,4 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 16. Create a background themed in space. It should be very dark, the same color as today, with little movement.
 
-17. The metronome moviment is completely incorrect. Use your tools to see it and use your web search to read and see how a metronome works. Fix the animation.
+// DONE 17. The metronome movement is completely incorrect. Use your tools to see it and use your web search to read and see how a metronome works. Fix the animation.

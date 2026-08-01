@@ -765,27 +765,30 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   if (metronomeToggle && metronomeBpm) {
     const arm = document.querySelector('.metronome-arm');
     const bpmValue = document.getElementById('metronome-bpm-value');
-    let metronomeTimer = null;
-    let swingSide = -1;
+    const armAngle = 18;
+    let animationFrame = null;
+    let metronomeStartedAt = null;
+    let metronomePeriodMs = 1667;
 
     const setArmAngle = angle => {
       if (arm) arm.style.transform = `rotate(${angle}deg)`;
     };
 
     const stopMetronome = () => {
-      if (metronomeTimer) {
-        clearInterval(metronomeTimer);
-        metronomeTimer = null;
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
       }
+      metronomeStartedAt = null;
       document.body.classList.remove('metronome-on');
-      setArmAngle(-18);
+      setArmAngle(-armAngle);
     };
 
     const syncMetronome = () => {
       const bpm = Number(metronomeBpm.value) || 72;
       const beatMs = Math.max(333, Math.round(60000 / bpm));
+      metronomePeriodMs = beatMs * 2;
       if (bpmValue) bpmValue.textContent = String(bpm);
-      document.body.style.setProperty('--metronome-duration', `${beatMs}ms`);
 
       if (!metronomeToggle.checked) {
         stopMetronome();
@@ -793,14 +796,18 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
       }
 
       document.body.classList.add('metronome-on');
-      if (metronomeTimer) clearInterval(metronomeTimer);
-      swingSide = -1;
-      setArmAngle(-18);
+      metronomeStartedAt = performance.now();
+      if (animationFrame) cancelAnimationFrame(animationFrame);
 
-      metronomeTimer = setInterval(() => {
-        swingSide *= -1;
-        setArmAngle(swingSide < 0 ? -18 : 18);
-      }, beatMs);
+      const tick = now => {
+        const elapsed = now - metronomeStartedAt;
+        const phase = (elapsed % metronomePeriodMs) / metronomePeriodMs;
+        const angle = Math.sin(phase * Math.PI * 2) * armAngle;
+        setArmAngle(angle);
+        animationFrame = requestAnimationFrame(tick);
+      };
+
+      animationFrame = requestAnimationFrame(tick);
     };
 
     metronomeToggle.addEventListener('change', syncMetronome);
