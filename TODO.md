@@ -17,13 +17,13 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 // DONE 5. Replace the wheel-rotation hint in the left menu
 
-6. Implement a dashboard to the right of the wheel. It will list all properties that can be infeered about the selected key: chords, relative/minor/major, possible modes (?), dont know music theory enough to list, thats why im buildiung it. 
+// DONE 6. Implement a dashboard to the right of the wheel. It lists the currently selected key’s major, relative minor, diminished chord, signature, chords, and possible modes.
 
 7. [NOT priority] Nausea mode: Add very low opacity "piece of pizza"-shaped colored surfaces that spin together with the slowly spinnning dashed border we have now. They have to be BARELY visible. Some will rotate like 5% faster or -15% to see if we can actually cause nausea with it. The only way to disable it is to hover the mouse in the lower left corner of the page whnile fully scrolled down. That will reveal the checkbox "Stop the world!!!! I wanna get off" that can then be checked off.
 
 // DONE 8. Make the Circle of Fifths as large as possible in the screen. To show its beauty toi the world, she is so pretty! 🥰 They grow so fast!
 
-9. Ther is a 5% chance that the degreeNumbers will pop away from their places when you rotate (the bug that was happening before some logic on the other direction rotation fixed i)
+9. [NOT priority] Ther is a 5% chance that the degreeNumbers will pop away from their places when you rotate (the bug that was happening before some logic on the other direction rotation fixed i)
 
 // DONE 10. Create README.md, list and briefly explain all shading/lighting effects used in the project. Recommendation: dont cite line number but cite variable names (good time to see if they are descriptive enough)
 
@@ -32,3 +32,5 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 // DONE 12. Add a subtle staff drift animation so the signature staves feel less rigid and more natural while the disc is spinning.
 
 13. Add a small metronome to the top right corner. Let user turn on/off and change bpm. Animate it to the right bpm,like a mechanical metronome
+
+14. Let the user spin either the disk or the mask using the mouse 😲

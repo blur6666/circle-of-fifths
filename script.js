@@ -61,6 +61,13 @@ const C_HUB_RIM = '#3a4058';
 const SEAM_W    = 2.6;
 
 const twoNames = s => s.includes('/');
+const sigText = k => {
+  const parts = [];
+  if (k.flats) parts.push(`${k.flats} flats`);
+  if (k.sharps) parts.push(`${k.sharps} sharps`);
+  return parts.join(' · ') || 'no sharps or flats';
+};
+const chordText = k => `${k.major} / ${k.minor} / ${k.dim}`;
 
 // -------------------------------------------------------------- spotlight
 // Spotlight tuning.
@@ -429,12 +436,24 @@ function buildHub(svg) {
     fill: C_HUB, stroke: C_HUB_RIM, 'stroke-width': 2.1
   }, g);
   const name = text(g, '', { x: CX, y: CY, class: 'hub-key' });
+  const dashMajor = document.getElementById('dash-major');
+  const dashMinor = document.getElementById('dash-minor');
+  const dashDim = document.getElementById('dash-dim');
+  const dashSignature = document.getElementById('dash-signature');
+  const dashChords = document.getElementById('dash-chords');
+  const dashModes = document.getElementById('dash-modes');
 
   return i => {
     const k = KEYS[i];
     name.textContent = k.major;
     name.setAttribute('font-size', twoNames(k.major) ? 30 : 58);
     name.setAttribute('fill', textMaj(i));
+    if (dashMajor) dashMajor.textContent = k.major;
+    if (dashMinor) dashMinor.textContent = k.minor;
+    if (dashDim) dashDim.textContent = k.dim;
+    if (dashSignature) dashSignature.textContent = sigText(k);
+    if (dashChords) dashChords.textContent = 'IV · I · V / ii · vi · iii / vii°';
+    if (dashModes) dashModes.textContent = 'Ionian · Dorian · Phrygian · Lydian · Mixolydian · Aeolian · Locrian';
   };
 }
 
