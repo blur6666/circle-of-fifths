@@ -1,58 +1,22 @@
-/* Circle of fifths — draws the wheel into #wheel as SVG.
-   Angles: 0 = 12 o'clock, increasing clockwise.
-
-   Styling follows the "Nocturne" study: dark stage, twelve hues spaced evenly
-   round the circle so position becomes colour, and the mask as a spotlight —
-   outside it the disc is blurred and desaturated as well as dimmed. */
+/* Draws the circle of fifths into #wheel. Angles start at 12 o'clock and increase clockwise. */
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 
-/* The outer coloured band. **Off**: it existed only to hold the key signatures, and
-   they no longer sit inside it — they hang off the rim at a fixed size and overrun
-   it, so the band was left as an empty ring of colour. Turn it back on to get it
-   back; the staves don't move either way, they just start further out. */
-const SHOW_KEY_SIGNATURES = false;
-
-/* The staff PNGs that go in that band. Turn this **off** to empty the ring while
-   working on the rest of the wheel — and keep it off if `staves/` is ever cleared,
-   since an <image> pointing at a missing file draws Chrome's broken-image icon,
-   which is worse than nothing. See staves/README.md. */
-const SHOW_STAVES = true;
-
-/* The accidental-count numbers printed next to the staves (0, 1, 2 ... and the
-   5b / 7# pairs on the enharmonic sectors). Parked for now — flip to true to bring
-   them back; the staves re-centre themselves to make room. */
-const SHOW_COUNTS = false;
-
 // ---------------------------------------------------------------- geometry
-/* Ring radii are the design's `emphasis-major` preset, scaled from its 760-unit
-   stage to the 1000-unit one this file has always drawn in (x 1000/760). The
-   diminished ring is a thin inner collar — it carries one short label and doesn't
-   need a third of the radius; minors and majors take the middle, and the signature
-   band is wide enough for a proper staff when we get to it. */
+/* Ring geometry in SVG user units. */
 const CX = 500, CY = 500;
 const R_HUB   = 80;    // blank centre
 const R_DIM   = 178;   // outer edge of the diminished ring
 const R_MINOR = 293;   // outer edge of the minor ring
 const R_MAJOR = 400;   // outer edge of the major ring
-const R_SIGS  = 500;   // outer edge once the key signatures are shown
-const R_OUT   = SHOW_KEY_SIGNATURES ? R_SIGS : R_MAJOR;
+const R_OUT   = R_MAJOR;
 
-// Each label sits in the middle of its band, and is sized off that band's width.
+// Label positions and sizes derive from their ring widths.
 const R_DIM_TEXT   = (R_HUB   + R_DIM)   / 2;
 const R_MINOR_TEXT = (R_DIM   + R_MINOR) / 2;
 const R_MAJOR_TEXT = (R_MINOR + R_MAJOR) / 2;
-const R_SIG        = (R_MAJOR + R_OUT)   / 2;   // where the key-signature graphics sit
 
-/* Fraction of the band each label takes. The design's numbers left the inner rings
-   very small once the wheel is capped to one screen — the diminished ring was
-   landing near 8px — so these run larger than the study.
-
-   The `two` variants are for the one sector that carries both spellings (`Gb/F#`).
-   They are held back by *width*, not height: five glyphs have to clear the seams
-   either side of a 30° sector. The diminished one is the exception — it breaks onto
-   two lines instead of using a slash, so each line is as short as a normal label and
-   only the two-line stack has to fit the band's depth. */
+// `two` accommodates the enharmonic Gb/F# sector.
 const FS_MAJOR = two => (R_MAJOR - R_MINOR) * (two ? 0.35 : 0.54);
 const FS_MINOR = two => (R_MINOR - R_DIM)   * (two ? 0.29 : 0.42);
 const FS_DIM   = two => (R_DIM   - R_HUB)   * (two ? 0.26 : 0.3);
@@ -78,26 +42,16 @@ const KEYS = [
 ];
 
 // ----------------------------------------------------------------- colour
-/* Twelve hues, evenly spaced round the wheel: C amber at the top, walking through
-   green at A, blue at Gb/F# and magenta back round to F. Position becomes colour.
-   Set as SVG attributes, so they must be real colour values — Chrome does not
-   resolve var() inside presentation attributes. */
+// SVG presentation attributes need resolved colour values rather than CSS variables.
 const hue = i => (45 + i * 30) % 360;
 
 const fillDim = i => `oklch(0.26 0.05 ${hue(i)})`;
 const fillMin = i => `oklch(0.305 0.075 ${hue(i)})`;
 const fillMaj = i => `oklch(0.37 0.1 ${hue(i)})`;
-const fillSig = i => `oklch(0.215 0.035 ${hue(i)})`;
 
-/* The study stepped these down as you move inward — 0.91 / 0.84 / 0.75 — which
-   reads as depth on a big canvas but leaves the middle of the wheel muddy at the
-   size this actually renders at. The inner bands are the *darkest* fills (0.305 and
-   0.26), so holding all three labels near the same lightness gives the centre more
-   contrast, not less, and the size difference still carries the hierarchy. */
 const textMaj = i => `oklch(0.95 0.15 ${hue(i)})`;
 const textMin = i => `oklch(0.93 0.13 ${hue(i)})`;
 const textDim = i => `oklch(0.91 0.11 ${hue(i)})`;
-const ink     = i => `oklch(0.88 0.13 ${hue(i)})`;   // key-signature marks
 
 const C_STAGE   = '#0a0b0f';   // the dark behind everything; also every seam
 const C_DISC    = '#141720';   // under the sectors, so the seams read as gaps
@@ -106,31 +60,13 @@ const C_HUB_RIM = '#3a4058';
 const C_HUB_SUB = '#aab0c4';   // on a near-black hub, the study's #6b7183 vanished
 const SEAM_W    = 2.6;
 
-/* Only labels carrying two spellings get shrunk to fit — currently just sector 6. */
 const twoNames = s => s.includes('/');
 
 // -------------------------------------------------------------- spotlight
-/* The mask: a window 3 sectors wide over the staff, major and minor rings, and
-   1 sector wide over the diminished ring. Everything outside it is blurred,
-   desaturated and dimmed, so peripheral keys stay recognisable as shapes without
-   competing for attention. All three are dialled here. */
-/* How far the outside is dimmed towards C_STAGE. This is the spotlight — at 0.13 it
-   was worth about 11% and the unlit keys read as fully lit. Luminance does the work
-   here rather than SPOT_SAT, because dimming reads as "further away" while draining
-   colour reads as "out of focus", which is the thing that looked wrong. */
+// Spotlight tuning.
 const SCRIM_ALPHA = 0.31;
-/* Blur is **off**, and at 1 it was doing nothing anyway — removing the primitive
-   left the render pixel-identical, because 1 user unit is about half a screen pixel
-   at the size this draws. Don't reach for this to explain a soft-looking label: the
-   labels lose apparent sharpness outside the window because SPOT_SAT drains their
-   colour and the scrim flattens the contrast against the sector behind them, not
-   because anything is resampled. Measured: edge energy is the same either side of
-   the window, saturation drops by a third. */
 const SPOT_BLUR   = 0;      // feGaussianBlur, in user units
 const SPOT_SAT    = 0.90;   // saturation kept outside the window
-/* The window's edge reads as a bright, deliberate highlight rather than a soft
-   grey hairline. That keeps it readable when the wheel is otherwise dark and busy,
-   and it gives the arm cue a target that can be seen from a glance. */
 const C_MASK_EDGE = '#f5f6ff';
 const MASK_EDGE_A = 1;
 const MASK_EDGE_W = 5.2;    // the window's hairline, in user units
@@ -159,9 +95,7 @@ function text(parent, str, attrs = {}) {
   return t;
 }
 
-/* Two lines centred on (x, y), used where a "/" would not fit. Tspans rather than
-   two <text> elements so it stays one selectable unit, and so the shared attrs
-   (fill, font-size, class) are set once. */
+// Two-line labels remain a single SVG text node.
 function textLines(parent, lines, attrs) {
   const t = text(parent, '', attrs);
   lines.forEach((line, i) => {
@@ -183,51 +117,18 @@ function circlePath(r) {
 }
 
 // ------------------------------------------------------- key signature PNGs
-/* The signature ring shows a picture of the real staff, one PNG per key
-   signature. Drop them in `staves/`:
-
-     none.png                     C — clef and bare staff, no accidentals
-     sharps-1.png … sharps-7.png
-     flats-1.png  … flats-7.png
-
-   They are built from the LilyPond SVGs alongside them by `staves/convert.sh`,
-   which cuts the bass half off each grand staff and normalises the vertical window
-   so every file is the same height with the staff in the same place. Re-run it if
-   the SVGs change; re-measure the three numbers below if its output size does.
-
-   Ink colour is baked into the PNG — a cool grey, dark enough not to outshout the
-   key names it sits beside. That's the trade for using pictures: the staves can't
-   take the sector's hue the way the ring labels do. */
+/* The signature ring uses pre-rendered staff images. */
 const STAFF_DIR = 'staves';
 
-/* Every staff is drawn at exactly this size — one staff-line gap, in user units.
-   It is a chosen number, not a solved one, and that is the whole point: the wheel
-   used to shrink the staves until the widest one fitted inside the signature band,
-   which made them tiny. They now hang off the rim and are free to overrun it.
-
-   Raising this makes the staves bigger *and* the coloured disc smaller, because the
-   viewBox has to grow to hold them and everything scales down together. Roughly, on
-   a 505px-wide wheel: 11 -> 4.9px line gap, disc 354px; 13 -> 5.4px, 343px;
-   18 -> 6.8px, 304px. */
+// Staff scale, measured in staff-line gaps.
 const STAFF_S   = 13;
 const STAFF_GAP = 8;    // clearance between the disc edge and the staff block
 
-/* Two separate knobs hold the staves back from shouting, and they stack:
-   `INK` in staves/convert.sh is baked into the PNGs (a cool grey, not white), and
-   this rides on top. Back either out on its own — this one is instant, the other
-   needs `bash convert.sh` re-run. */
+/* Keep the staff images from outshouting the key names. */
 const STAFF_OPACITY = 0.8;
 
-/* Measured off what convert.sh actually produces, in staff-line gaps: every file
-   is 7.62 gaps tall (staff is 4 of those; the rest is the clef's reach above and
-   below), and the width starts at 5.5 for clef and margins, then grows a fixed step
-   per accidental — sharps are wider glyphs than flats.
-
-   The 2% on the width is load-bearing. `preserveAspectRatio="meet"` scales by
-   whichever of width/height is tighter; since every PNG is the same height and the
-   box height is always `STAFF_H * s`, forcing height to be the tighter one gives
-   every staff on the wheel an identical scale — which is what makes the line
-   spacing match from sector to sector. */
+/* Staff image dimensions in staff-line gaps. Slack makes height constrain scaling
+   so every image keeps the same staff-line spacing. */
 const STAFF_H      = 7.62;
 const STAFF_W0     = 5.50;
 const STAFF_W_STEP = { sharp: 1.094, flat: 0.900 };
@@ -235,17 +136,14 @@ const STAFF_SLACK  = 1.02;
 
 const staffW = (kind, n, both) => staffBoxW(kind, n, both) * STAFF_SLACK;
 
-/* A dual sector takes ONE staff holding both signatures — clef, then the flats, then
-   the sharps — rather than two staves side by side. Two whole staves needed 315 units
-   and cleared their neighbours by 14; the hybrid needs 247 and clears by 48, because
-   it spends one clef instead of two. Built by staves/convert.sh. */
+// The enharmonic sector uses one combined staff image.
 const staffSrc = (kind, n, both) =>
   both               ? `${STAFF_DIR}/hybrid-${both[0]}-${both[1]}.png`
   : n === 0          ? `${STAFF_DIR}/none.png`
                      : `${STAFF_DIR}/${kind}s-${n}.png`;
 
 /* Clef plus lead-in, in staff-line gaps — the part the spliced-on second half does
-   not repeat (convert.sh cuts it at CLEF_END). Measured from the same output. */
+   not repeat. */
 const STAFF_CLEF = 4.29;
 
 /* Which staff a sector carries. Most name one or the other — a missing property means
@@ -334,11 +232,9 @@ const STAVES = KEYS.map((k, i) => {
    centre line. Turning the wheel can push a wide staff 12% further out than this,
    sideways only (vertically the resting frame is never beaten); that is why the
    element does not clip its overflow rather than why this number is bigger. */
-const R_RIM = SHOW_STAVES
-  ? STAVES.reduce((m, s) => Math.max(m,
-      Math.hypot(Math.max(Math.abs(s.x - CX), Math.abs(s.x + s.w - CX)),
-                 Math.max(Math.abs(s.y - CY), Math.abs(s.y + s.h - CY)))), R_OUT)
-  : R_OUT;
+const R_RIM = STAVES.reduce((m, s) => Math.max(m,
+    Math.hypot(Math.max(Math.abs(s.x - CX), Math.abs(s.x + s.w - CX)),
+               Math.max(Math.abs(s.y - CY), Math.abs(s.y + s.h - CY)))), R_OUT);
 
 /* One key signature. `pointer-events: all` so the whole box is hoverable rather
    than just the inked pixels — the target is small enough as it is. */
@@ -522,9 +418,6 @@ function draw() {
     const a0 = mid - SECTOR / 2, a1 = mid + SECTOR / 2;
 
     // ring backgrounds
-    if (SHOW_KEY_SIGNATURES) {
-      el('path', { d: ringSector(R_MAJOR, R_OUT, a0, a1), fill: fillSig(i) }, bg);
-    }
     el('path', { d: ringSector(R_MINOR, R_MAJOR, a0, a1), fill: fillMaj(i) }, bg);
     el('path', { d: ringSector(R_DIM,   R_MINOR, a0, a1), fill: fillMin(i) }, bg);
     el('path', { d: ringSector(R_HUB,   R_DIM,   a0, a1), fill: fillDim(i) }, bg);
@@ -559,15 +452,6 @@ function draw() {
       'font-size': FS_MAJOR(twoNames(k.major)), fill: textMaj(i)
     }), mjx, mjy);
 
-    // --- the accidental count, when it is switched on. The staff itself is not
-    // drawn here: it lives outside the disc, so it is placed after this loop.
-    if (SHOW_COUNTS) {
-      const [, count] = staffPart(k);
-      const [nx, ny] = pt(R_SIG, mid);
-      upright(text(labels, String(count), {
-        x: nx, y: ny, class: 'count', 'font-size': 30, fill: ink(i)
-      }), nx, ny);
-    }
   });
 
   // ring boundaries, as seams rather than lines
@@ -584,10 +468,9 @@ function draw() {
      see staffAt. Being out of #disc also stops the blurred veil making a clipped-
      away duplicate of all twelve. */
   const stavesG = el('g', { id: 'staves' }, svg);
-  if (SHOW_STAVES) STAVES.forEach(s => { s.node = staffImage(stavesG, s); });
+  STAVES.forEach(s => { s.node = staffImage(stavesG, s); });
 
   const placeStaves = a => {
-    if (!SHOW_STAVES) return;
     for (const s of STAVES) {
       const [x, y] = staffAt(s.w, s.h, s.deg + a);
       s.node.setAttribute('x', x);
@@ -612,10 +495,8 @@ function draw() {
 }
 
 // ---------------------------------------------------------------- controls
-/* Two things can turn: the window (`mask`) or the disc under it (`wheel`). One at a
-   time, chosen by the segmented control, and *neither* until one is chosen — the
-   arrows are dead until then, which is what makes arming visible. Reset puts both
-   angles back to zero and disarms.
+/* Two things can turn: the window (`mask`) or the disc under it (`wheel`). The
+   checkbox chooses one; Reset puts both angles back to zero.
 
    Both angles are unbounded: they accumulate, so you can keep going round in either
    direction forever and 390° is a different number from 30° even though it draws the

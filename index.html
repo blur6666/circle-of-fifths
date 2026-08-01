@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Circle of Fifths</title>
-<!-- Resource hints, not styling — the fonts themselves are @import-ed by style.css. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -12,17 +11,14 @@
 </head>
 <body>
 
-<!-- Two full-height screens. The first is the instrument and nothing else; the
-     second is the reading of it. -->
 <section class="screen" id="wheel-screen">
   <h1>The Circle of Fifths</h1>
 
-  <!-- Left column, wheel, right column. The wheel is in the middle of the *window*,
-       not of what's left over, so the two side columns are equal by construction. -->
   <div class="stage">
 
     <div class="side">
       <p>Spin the Circle!</p>
+      <p class="hint" id="hint" aria-live="polite"></p>
       <div class="arrows">
         <button class="arrow" data-step="-1" aria-label="Previous key">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -75,15 +71,15 @@
   <div class="warning-strip" aria-label="warning strip">
     <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
       <strong>NON REVIEWED AI GENERATED</strong>
-      <span>So take it with a <s>grain</s> mountain of salt ;)</span>
+      <span>So take it with a <s>grain</s> mountain of salt </span>
     </div>
     <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
       <strong>NON REVIEWED AI GENERATED</strong>
-      <span>So take it with a <s>grain</s> mountain of salt ;)</span>
+      <span>So take it with a <s>grain</s> mountain of salt </span>
     </div>
     <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
       <strong>NON REVIEWED AI GENERATED</strong>
-      <span>So take it with a <s>grain</s> mountain of salt ;)</span>
+      <span>So take it with a <s>grain</s> mountain of salt </span>
     </div>
   </div>
   <h2>Working it</h2>
