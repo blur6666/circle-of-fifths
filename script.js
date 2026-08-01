@@ -5,7 +5,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 // ---------------------------------------------------------------- geometry
 /* Ring geometry in SVG user units. */
 const CX = 500, CY = 500;
-const R_HUB   = 80;    // blank centre
+const R_HUB   = 100;    // blank centre
 const R_DIM   = 178;   // outer edge of the diminished ring
 const R_MINOR = 293;   // outer edge of the minor ring
 const R_MAJOR = 400;   // outer edge of the major ring
@@ -19,7 +19,7 @@ const R_MAJOR_TEXT = (R_MINOR + R_MAJOR) / 2;
 // `two` accommodates the enharmonic Gb/F# sector.
 const FS_MAJOR = two => (R_MAJOR - R_MINOR) * (two ? 0.35 : 0.54);
 const FS_MINOR = two => (R_MINOR - R_DIM)   * (two ? 0.29 : 0.42);
-const FS_DIM   = two => (R_DIM   - R_HUB)   * (two ? 0.26 : 0.3);
+const FS_DIM   = two => (R_DIM   - R_HUB)   * (two ? 0.35 : 0.40);
 
 const SECTOR = 30;          // degrees per key
 
@@ -72,6 +72,13 @@ const MASK_EDGE_A = 1;
 const MASK_EDGE_W = 5.2;    // the window's hairline, in user units
 const C_MASK_GLOW = 'rgba(160,125,255,.92)';
 const MASK_GLOW_R = 24;
+
+// Degrees sit in the leading outer corner of each mask cell.
+const DEGREE_LABELS = [
+  ['IV',   R_MAJOR - 30, -40, 26], ['I',   R_MAJOR - 30, -10, 26], ['V',   R_MAJOR - 30, 20, 26],
+  ['ii',   R_MINOR - 20, -40, 26], ['vi',  R_MINOR - 20, -10, 26], ['iii', R_MINOR - 20, 20, 26],
+  ['vii°', R_DIM - 13, -4, 16]
+];
 
 // ------------------------------------------------------------------ helpers
 function pt(r, deg) {
@@ -309,6 +316,12 @@ function buildSpotlight(svg, defs) {
   el('path', {
     d: outside, 'fill-rule': 'evenodd', fill: C_STAGE, opacity: SCRIM_ALPHA
   }, g);
+  const degreeNodes = DEGREE_LABELS.map(([label, radius, angle, size]) => {
+    const [x, y] = pt(radius, angle);
+    return { node: text(g, label, {
+      x, y, class: 'degree-label', fill: C_MASK_EDGE, 'font-size': size, opacity: 0.9
+    }), x, y };
+  });
   /* The "you can turn this" cue for mask mode: the same window outline, drawn fat
      and invisible underneath the real one, pulsed by JS when body.armed-mask is
      set. A separate element rather than an animation on the edge itself, so the
@@ -335,6 +348,9 @@ function buildSpotlight(svg, defs) {
       const t = `rotate(${a} ${CX} ${CY})`;
       g.setAttribute('transform', t);
       shape.setAttribute('transform', t);
+      for (const { node, x, y } of degreeNodes) {
+        node.setAttribute('transform', `rotate(${-a} ${x} ${y})`);
+      }
     },
     setArmed(armed) {
       if (!armed) {

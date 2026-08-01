@@ -352,13 +352,56 @@ body.armed-wheel #arm-ring {
 }
 
 /* SVG text */
-.major-label, .minor-label, .dim-label, .count,
+.major-label, .minor-label, .dim-label, .degree-label, .count,
 .hub-key, .hub-sig {
   font-family: var(--display);
   font-weight: 300;
 }
 
 .hub-key { font-weight: 500; }
+.degree-label {
+  font-family: 'Trebuchet MS', Verdana, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
 
 .staff { cursor: help; }
 .hub-sig { opacity: 0.92; }
+
+hover-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px; /* Space between drone and shadow */
+}
+
+.drone {
+  animation: float 4s ease-in-out infinite;
+}
+
+.shadow {
+  width: 50px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%; /* Makes it an oval shape */
+  filter: blur(4px); /* Softens the shadow edges */
+  
+  /* Syncs perfectly with the drone's 4s animation */
+  animation: shadow-pulse 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes shadow-pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.5; 
+  }
+  50% { 
+    transform: scale(0.7); /* Shadow gets smaller as drone goes up */
+    opacity: 0.2;          /* Shadow fades as drone goes up */
+  }
+}
