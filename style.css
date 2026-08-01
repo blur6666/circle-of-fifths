@@ -55,11 +55,12 @@ h1 {
   gap: 18px;
 }
 
-/* Leave room for staff images as they move around the rim. The wheel now grows
-   to the full viewport width available once the control rail is accounted for. */
+/* Leave room for staff images as they move around the rim. On larger screens,
+   the wheel should claim a much larger share of the stage rather than being
+   trapped by the old 58vw cap. */
 #wheel {
   grid-column: 2;
-  width: min(calc(100vh - 88px), calc(100vw - 320px));
+  width: min(70vw, calc(100vh - 40px));
   height: auto;
   display: block;
   overflow: visible;
