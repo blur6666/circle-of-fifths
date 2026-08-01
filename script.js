@@ -305,7 +305,7 @@ function buildSpotlight(svg, defs) {
   // Purely decorative overlays, both of them. pointer-events off so they can't
   // swallow hover from the disc underneath — and so the veil's duplicate <title>
   // elements, copied wholesale out of #disc, can never fire a second tooltip.
-  el('use', {
+  const veil = el('use', {
     href: '#disc',
     'clip-path': 'url(#spot-outside)',
     filter: 'url(#spot-veil)',
@@ -359,6 +359,11 @@ function buildSpotlight(svg, defs) {
       for (const { node, x, y } of degreeNodes) {
         node.setAttribute('transform', `rotate(${-a} ${x} ${y})`);
       }
+    },
+    setVisible(visible) {
+      const display = visible ? '' : 'none';
+      veil.style.display = display;
+      g.style.display = display;
     },
     setArmed(armed) {
       if (!armed) {
@@ -547,12 +552,13 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
 
   const hint  = document.getElementById('hint');
   const moveMask = document.getElementById('move-mask');
+  const hideMask = document.getElementById('hide-mask');
   const degreeDroneToggle = document.getElementById('degree-drone-toggle');
   const steps = [...document.querySelectorAll('[data-step]')];
 
   const HINTS = {
     mask:    'The arrows turn the mask',
-    wheel:   'The arrows turn the wheel'
+    wheel:   'The arrows turn the circle'
   };
 
   /* The disc turns; every label on it turns back about its own anchor by the same
@@ -624,6 +630,11 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   if (moveMask) {
     moveMask.addEventListener('change', () => {
       setMode(moveMask.checked ? 'mask' : 'wheel');
+    });
+  }
+  if (hideMask) {
+    hideMask.addEventListener('change', () => {
+      spot.setVisible(!hideMask.checked);
     });
   }
   if (degreeDroneToggle) {
