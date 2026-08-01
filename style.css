@@ -55,10 +55,11 @@ h1 {
   gap: 18px;
 }
 
-/* Leave room for staff images as they move around the rim. */
+/* Leave room for staff images as they move around the rim. The wheel now grows
+   to the full viewport width available once the control rail is accounted for. */
 #wheel {
   grid-column: 2;
-  width: min(calc(100vh - 76px), 58vw);
+  width: min(calc(100vh - 88px), calc(100vw - 320px));
   height: auto;
   display: block;
   overflow: visible;
