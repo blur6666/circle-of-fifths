@@ -8,10 +8,14 @@ No build step, no dependencies, no tests, no framework. `index.html` + `style.cs
 
 Don't do more than asked; ask if unsure. No tests, no architecture, no
 hardware/software edge-case support unless asked. Styling adaptations are fine.
-Reference images — copy them; you don't need to reason about music theory:
-`circle-of-fifths-chart.jpg` (the wheel), `circle-of-fifths-chart-mask-example.jpg`
-(the owner's sketch of the mask — this one is the product vision),
-`circle-of-fifths-mask.png` (a physical wheel, real-life example only).
+The reference images were dropped from the repo once a proper design mockup was on
+the way. Everything they encoded is written down below, so you shouldn't need them —
+but they are still in git history if you do:
+
+    git show 0fac0cd:circle-of-fifths-chart.jpg > chart.jpg
+
+(likewise `circle-of-fifths-chart-mask-example.jpg`, the owner's mask sketch, and
+`circle-of-fifths-mask.png`, a photo of a physical wheel.)
 
 ## How it draws
 

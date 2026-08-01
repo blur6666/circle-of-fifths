@@ -27,9 +27,13 @@ h1 {
 }
 
 /* Capped three ways so the wheel and both arrow rows fit one screen without
-   scrolling. The 132px is the page chrome above and below it (title + two control
-   rows); raise the 950px cap or that subtraction if you want it bigger. Note the
-   staff-grid letters get hard to read much below ~700px across. */
+   scrolling. Asked for deliberately, knowing it costs legibility — this is a
+   trade, not an oversight. The 132px is the page chrome above and below (title +
+   two control rows). On a 1366x768 Chromebook, once browser chrome is subtracted,
+   it lands the wheel near 500-540px, which draws the 11px staff-cell letters at
+   ~6px: chord names, mask and diminished ring stay clear, the key-signature grids
+   do not. Raise the subtraction, or drop the 100vh term, to trade scrolling back
+   for readable grids. */
 #wheel {
   width: min(94vw, 950px, calc(100vh - 132px));
   height: auto;
