@@ -1,0 +1,52 @@
+/* The ring / hub / cell-box colours live in script.js — they are set as SVG
+   attributes, which Chrome will not resolve var() inside. Only the ones used by
+   real CSS rules below belong here. */
+:root {
+  --cell-text: #444444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 16px 16px 40px;
+  background: #f4f4f5;
+  color: #222;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 8px 0 12px;
+  letter-spacing: -0.01em;
+}
+
+/* Sized by width only, on purpose. Capping by viewport height shrank the wheel to
+   ~645px on a 1366x768 Chromebook and the little staff letters became unreadable;
+   better to fill the width and scroll a bit. */
+#wheel {
+  width: min(94vw, 950px);
+  height: auto;
+  display: block;
+}
+
+/* --- SVG text --- */
+.major-label { font-weight: 700; }
+.minor-label { font-weight: 600; }
+.qualifier   { font-weight: 400; fill: #333; }
+.count       { font-weight: 700; }
+.cell-letter { font-weight: 600; fill: var(--cell-text); }
+.cell-letter.on { fill: #ffffff; }
+
+.legend {
+  max-width: 640px;
+  margin: 18px auto 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4a4a4a;
+  text-align: center;
+}

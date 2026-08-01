@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Circle of Fifths</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>The Circle of Fifths</h1>
+
+<svg id="wheel" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="Circle of fifths chart"></svg>
+
+<p class="legend">
+  <strong>Outer ring</strong> — the key signature on the treble staff.
+  Left column = the five lines (F D B G E), right column = the four spaces (E C A F).
+  Filled boxes are the notes that get a sharp or a flat.
+  <br>
+  <strong>Middle ring</strong> — major key. <strong>Inner ring</strong> — its relative minor.
+  The top sector and the three at the bottom show two spellings of the same pitch, so they
+  carry two key signatures: flat spelling on the left, sharp spelling on the right.
+  <br>
+  The accidental-count numbers are switched off for now —
+  set <code>SHOW_COUNTS = true</code> at the top of <code>script.js</code> to bring them back.
+</p>
+
+<script src="script.js"></script>
+</body>
+</html>
