@@ -21,6 +21,29 @@ body {
   color: var(--ink);
   font-family: var(--display);
 }
+body::before {
+  content: '';
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle at 18px 24px, rgba(214, 224, 255, 0.34) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72px 54px, rgba(166, 190, 255, 0.2) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 126px 98px, rgba(255, 223, 194, 0.18) 0 1px, transparent 1.5px);
+  background-size: 160px 140px, 230px 190px, 290px 250px;
+  animation: star-drift 90s linear infinite;
+}
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes star-drift {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 160px -140px, -230px -190px, 290px -250px; }
+}
 
 /* Layout */
 .screen {
@@ -518,6 +541,7 @@ body.wheel-powering-down #arm-hub-inner {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
   body.armed-mask .arm-glow  { opacity: 0.45; }
   body.armed-wheel #arm-ring,
   body.armed-wheel #arm-ring-outer,
