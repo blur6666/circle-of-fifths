@@ -5,11 +5,11 @@ PNGs the wheel actually loads:
 
     none.png                     C — clef and bare staff, no accidentals
     sharps-1.png … sharps-7.png
-    flats-1.png  … flats-4.png
+    flats-1.png  … flats-5.png
 
-Only four flat keys are left on the wheel — A♭ E♭ B♭ F — since the bottom half is
-spelled with sharps now. `5flats/6flats/7flats.svg` are kept as source in case that
-changes; raise `FLATS_MAX` in the script to build their PNGs again.
+Five flat keys are on the wheel — D♭ A♭ E♭ B♭ F. Positions 5 and 6 are spelled with
+sharps (B, F♯), so `6flats/7flats.svg` are kept as source in case that changes; raise
+`FLATS_MAX` in the script to build their PNGs again.
 
 Both are committed. Re-run `bash convert.sh` from this folder after changing an SVG.
 Needs ImageMagick 7 with the rsvg delegate; nothing else in the project does, which

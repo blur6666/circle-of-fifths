@@ -87,16 +87,34 @@ for n in 1 2 3 4 5 6 7; do
   src=$([ $n = 1 ] && echo "1sharp.svg" || echo "${n}sharps.svg")
   convert_one "$src" sharp "$n" "sharps-$n.png"
 done
-# Only 1-4 flats are on the wheel: the bottom half is spelled with sharps now, so
-# A♭ E♭ B♭ F are the only flat keys left. 5flats/6flats/7flats.svg are kept as source
-# in case that changes — raise this to 7 to get their PNGs back.
-FLATS_MAX=4
+# 1-6 flats are on the wheel: sector 6 carries both spellings (G♭ = 6 flats alongside
+# F♯ = 6 sharps), then D♭ A♭ E♭ B♭ F. Only 7flats.svg is unused — raise this to 7 if a
+# C♭ spelling is ever wanted.
+FLATS_MAX=6
 
 echo "flats:"
 for n in $(seq 1 $FLATS_MAX); do
   src=$([ $n = 1 ] && echo "1flat.svg" || echo "${n}flats.svg")
   convert_one "$src" flat "$n" "flats-$n.png"
 done
+# --- the dual sector -------------------------------------------------------------
+# Sector 6 carries both spellings, and two whole staves side by side barely clear
+# their neighbours. One staff holding both signatures is far narrower — a single clef
+# instead of two — so splice one: all of the flat file, then the sharp file from its
+# first accidental onward. Every export puts the clef in the same place, so the cut
+# column is a constant and the staff lines join seamlessly.
+CLEF_END=134         # px; where the accidentals start in every file
+
+hybrid() {           # $1 = flats, $2 = sharps, $3 = out
+  magick "flats-$1.png" \
+         \( "sharps-$2.png" -crop "+${CLEF_END}+0" +repage \) \
+         +append -strip "$3"
+  printf "  %-18s -> %-16s %s\n" "flats-$1 + sharps-$2" "$3" \
+         "$(magick identify -format '%wx%h' "$3")"
+}
+echo "hybrid:"
+hybrid 6 6 hybrid-6-6.png
+
 echo
 echo "Staff-line gap in the output is $(awk 'BEGIN{printf "%.2f", 125/4}')px;"
 echo "every file is $(( OUT_H_ABOVE + 125 + OUT_H_BELOW ))px tall with the staff in the same place."

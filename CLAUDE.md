@@ -105,10 +105,10 @@ back in there instead.
 ## No enharmonic sectors any more
 
 The wheel used to give C and the three at the bottom two spellings and two key
-signatures each — `D♭/C♯`, `G♭/F♯`, `C♭/B`. That is gone: the bottom half is now
-written as sharps throughout (B, F♯, C♯) and only A♭ E♭ B♭ F carry flats, so every
-sector has exactly one name per ring and one key signature. `flats-5/6/7.png` are
-orphaned by that and nothing loads them.
+signatures each — `D♭/C♯`, `G♭/F♯`, `C♭/B`. That is gone: every sector now has exactly
+one name per ring and one key signature. Sharps run 0-6 from C round to F♯, then the
+seam falls and flats run 5-1 from D♭ back to F. `flats-6/7.png` are orphaned by that
+and nothing loads them.
 
 If duals ever come back, note what bit last time: a key that names only `sharps: 0`
 and no `flats` made `k.sharps || k.flats` evaluate to `undefined`, which turned
@@ -127,8 +127,8 @@ right** — three is the ceiling, and four layouts tie at 10 of 12 overall:
 
 | positions 5, 6, 7 | correct | misspelled |
 |---|---|---|
-| **B, F♯, C♯** (ours) | E, B, F♯ | C♯, A♭ |
-| B, F♯, D♭ | E, B, A♭ | F♯, D♭ |
+| B, F♯, C♯ | E, B, F♯ | C♯, A♭ |
+| **B, F♯, D♭** (ours) | E, B, A♭ | F♯, D♭ |
 | B, G♭, D♭ | E, D♭, A♭ | B, G♭ |
 | C♭, G♭, D♭ | G♭, D♭, A♭ | E, C♭ |
 
@@ -138,15 +138,16 @@ any *correct* window spells them uniformly; that inference is wrong, because two
 windows have to break whatever you choose, and mixed layouts simply break different
 ones.
 
-**Two windows are knowingly wrong, and are not bugs:**
+Position 7 is spelled `D♭`, chosen so that `A♭` major — much the most used key of the
+group — reads correctly. **Two windows are knowingly wrong as a result, and are not
+bugs:**
 
-- `A♭` major shows its IV as `C♯`, where the music says `D♭`.
-- `C♯` major shows its V as `A♭`, where the music says `G♯` — a spelling that has no
-  sector at all.
+- `F♯` major shows its V as `D♭`, where the music says `C♯`.
+- `D♭` major shows its IV as `F♯`, where the music says `G♭`.
 
-Don't "fix" either in isolation. Changing position 7 to `D♭` repairs `A♭` but breaks
-`F♯` and `D♭` instead; the score stays 10 of 12. Only change the spelling if the
-owner wants a different pair of casualties.
+Don't "fix" either in isolation. Repairing one breaks two others and the score stays
+10 of 12 whatever you do. Only change the spelling if the owner wants a different
+pair of casualties.
 
 ## Flags, top of script.js
 

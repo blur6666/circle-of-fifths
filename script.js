@@ -46,18 +46,22 @@ const R_SIG        = (R_MAJOR + R_OUT)   / 2;   // where the key-signature graph
 
 /* Fraction of the band each label takes. The design's numbers left the inner rings
    very small once the wheel is capped to one screen — the diminished ring was
-   landing near 8px — so these run larger than the study. The two-name variants are
-   held back by width, not height: `B♭°/A♯°` has to clear the seams either side of a
-   30° sector at r=137, which is only ~72 units wide. */
-const FS_MAJOR = two => (R_MAJOR - R_MINOR) * (two ? 0.99  : 0.54);  
-const FS_MINOR = two => (R_MINOR - R_DIM)   * (two ? 0.99  : 0.42);
-const FS_DIM   = two => (R_DIM   - R_HUB)   * (two ? 0.99  : 0.3);
+   landing near 8px — so these run larger than the study.
+
+   The `two` variants are for the one sector that carries both spellings (`G♭/F♯`).
+   They are held back by *width*, not height: five glyphs have to clear the seams
+   either side of a 30° sector. The diminished one is the exception — it breaks onto
+   two lines instead of using a slash, so each line is as short as a normal label and
+   only the two-line stack has to fit the band's depth. */
+const FS_MAJOR = two => (R_MAJOR - R_MINOR) * (two ? 0.35 : 0.54);
+const FS_MINOR = two => (R_MINOR - R_DIM)   * (two ? 0.29 : 0.42);
+const FS_DIM   = two => (R_DIM   - R_HUB)   * (two ? 0.26 : 0.3);
 
 const SECTOR = 30;          // degrees per key
 
 // ------------------------------------------------------------------- data
-// Clockwise from the top. `dual` keys show both spellings and both key signatures.
-// `dim` is the diminished chord of that key (the vii°).
+// Clockwise from the top. A key naming both `flats` and `sharps` carries both
+// spellings and both key signatures. `dim` is the diminished chord of the key (vii°).
 const KEYS = [
   { major: 'C',       minor: 'a',       dim: 'B°',        sharps: 0,},
   { major: 'G',       minor: 'e',       dim: 'F♯°',       sharps: 1 },
@@ -65,8 +69,8 @@ const KEYS = [
   { major: 'A',       minor: 'f♯',      dim: 'G♯°',       sharps: 3 },
   { major: 'E',       minor: 'c♯',      dim: 'D♯°',       sharps: 4 },
   { major: 'B',       minor: 'g♯',      dim: 'A♯°',       sharps: 5 },
-  { major: 'F♯',      minor: 'd♯',      dim: 'E♯°',       sharps: 6 },
-  { major: 'C♯',      minor: 'a♯',      dim: 'B♯°',       sharps: 7 },
+  { major: 'G♭/F♯',   minor: 'e♭/d♯',   dim: 'F°/E♯°',    flats: 6, sharps: 6 },
+  { major: 'D♭',      minor: 'b♭',      dim: 'C°',        flats: 5 },
   { major: 'A♭',      minor: 'f',       dim: 'G°',        flats: 4 },
   { major: 'E♭',      minor: 'c',       dim: 'D°',        flats: 3 },
   { major: 'B♭',      minor: 'g',       dim: 'A°',        flats: 2 },
@@ -102,10 +106,7 @@ const C_HUB_RIM = '#3a4058';
 const C_HUB_SUB = '#aab0c4';   // on a near-black hub, the study's #6b7183 vanished
 const SEAM_W    = 2.6;
 
-/* Only labels carrying two spellings get shrunk to fit. Note this is NOT the same
-   as the sector's `dual` flag: C is dual (both spellings of it are written the same
-   way) but its names are single, so C / a / B° stay full size like their
-   neighbours. */
+/* Only labels carrying two spellings get shrunk to fit — currently just sector 6. */
 const twoNames = s => s.includes('/');
 
 // -------------------------------------------------------------- spotlight
@@ -157,6 +158,17 @@ function text(parent, str, attrs = {}) {
     'dominant-baseline': 'central'
   }, attrs), parent);
   t.textContent = str;
+  return t;
+}
+
+/* Two lines centred on (x, y), used where a "/" would not fit. Tspans rather than
+   two <text> elements so it stays one selectable unit, and so the shared attrs
+   (fill, font-size, class) are set once. */
+function textLines(parent, lines, attrs) {
+  const t = text(parent, '', attrs);
+  lines.forEach((line, i) => {
+    el('tspan', { x: attrs.x, dy: i === 0 ? '-0.55em' : '1.1em' }, t).textContent = line;
+  });
   return t;
 }
 
@@ -223,14 +235,37 @@ const STAFF_W0     = 5.50;
 const STAFF_W_STEP = { sharp: 1.094, flat: 0.900 };
 const STAFF_SLACK  = 1.02;
 
-const staffW = (kind, n) => (STAFF_W0 + n * STAFF_W_STEP[kind]) * STAFF_SLACK;
+const staffW = (kind, n, both) => staffBoxW(kind, n, both) * STAFF_SLACK;
 
-const staffSrc = (kind, n) =>
-  n === 0 ? `${STAFF_DIR}/none.png` : `${STAFF_DIR}/${kind}s-${n}.png`;
+/* A dual sector takes ONE staff holding both signatures — clef, then the flats, then
+   the sharps — rather than two staves side by side. Two whole staves needed 315 units
+   and cleared their neighbours by 14; the hybrid needs 247 and clears by 48, because
+   it spends one clef instead of two. Built by staves/convert.sh. */
+const staffSrc = (kind, n, both) =>
+  both               ? `${STAFF_DIR}/hybrid-${both[0]}-${both[1]}.png`
+  : n === 0          ? `${STAFF_DIR}/none.png`
+                     : `${STAFF_DIR}/${kind}s-${n}.png`;
 
-/* Which staff a sector carries. A key names one or the other, never both — a
-   missing property means zero, which is C. */
-const staffPart = k => [k.sharps ? 'sharp' : 'flat', k.sharps || k.flats || 0];
+/* Clef plus lead-in, in staff-line gaps — the part the spliced-on second half does
+   not repeat (convert.sh cuts it at CLEF_END). Measured from the same output. */
+const STAFF_CLEF = 4.29;
+
+/* Which staff a sector carries. Most name one or the other — a missing property means
+   zero, which is C. `G♭/F♯` names both, and takes the hybrid: `both` is [flats,
+   sharps] and the kind/count fall back to the flat half for anything that needs one
+   value. */
+const isDual = k => k.flats != null && k.sharps != null;
+
+const staffPart = k => isDual(k)
+  ? ['flat', k.flats, [k.flats, k.sharps]]
+  : [k.sharps ? 'sharp' : 'flat', k.sharps || k.flats || 0, null];
+
+/* Width in gaps. The hybrid is the flat staff plus the sharp staff minus the clef the
+   second half drops. */
+const staffBoxW = (kind, n, both) => both
+  ? (STAFF_W0 + both[0] * STAFF_W_STEP.flat)
+    + (STAFF_W0 + both[1] * STAFF_W_STEP.sharp) - STAFF_CLEF
+  : STAFF_W0 + n * STAFF_W_STEP[kind];
 
 /* The order accidentals are added in — which is also the order they are written on
    the staff, so the first n of these are exactly what the picture shows. */
@@ -241,12 +276,21 @@ const FLAT_ORDER  = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
    <title>, which Chrome shows on hover and screen readers announce, so the one
    element covers both. Worth having: the staves render around 22px tall, too small
    to count accidentals at a glance. */
-function staffTitle(k, kind, n) {
+const accidentals = (kind, n) =>
+  (kind === 'sharp' ? SHARP_ORDER : FLAT_ORDER)
+    .slice(0, n).map(note => note + (kind === 'sharp' ? '♯' : '♭')).join(' ');
+
+const spelt = (kind, n) => `${n} ${kind}${n > 1 ? 's' : ''}: ${accidentals(kind, n)}`;
+
+function staffTitle(k, kind, n, both) {
+  // the hybrid holds two signatures, so it names both — "G♭/F♯" splits to match
+  if (both) {
+    const [flatName, sharpName] = k.major.split('/');
+    return `${flatName} major — ${spelt('flat', both[0])}`
+         + `   ·   ${sharpName} major — ${spelt('sharp', both[1])}`;
+  }
   if (n === 0) return `${k.major} major — no sharps or flats`;
-  const mark  = kind === 'sharp' ? '♯' : '♭';
-  const notes = (kind === 'sharp' ? SHARP_ORDER : FLAT_ORDER)
-    .slice(0, n).map(note => note + mark).join(' ');
-  return `${k.major} major — ${n} ${kind}${n > 1 ? 's' : ''}: ${notes}`;
+  return `${k.major} major — ${spelt(kind, n)}`;
 }
 
 /* Where each staff sits, worked out up front so the viewBox can be framed around
@@ -261,12 +305,14 @@ function staffTitle(k, kind, n) {
    individually need. The outer boundary comes out ragged; that is fine, it is on
    black, and it is the ragged edge that lets every staff be the same size. */
 const STAVES = KEYS.map((k, i) => {
-  const [kind, n] = staffPart(k);
+  const [kind, n, both] = staffPart(k);
   const deg = i * SECTOR, th = deg * Math.PI / 180;
-  const w = staffW(kind, n) * STAFF_S, h = STAFF_H * STAFF_S;
+  const w = staffW(kind, n, both) * STAFF_S, h = STAFF_H * STAFF_S;
   const reach = w * Math.abs(Math.sin(th)) + h * Math.abs(Math.cos(th));
   const [cx, cy] = pt(R_OUT + STAFF_GAP + reach / 2, deg);
-  return { kind, n, w, h, x: cx - w / 2, y: cy - h / 2, title: staffTitle(k, kind, n) };
+  return { kind, n, both, w, h,
+           x: cx - w / 2, y: cy - h / 2,
+           title: staffTitle(k, kind, n, both) };
 });
 
 /* How far the drawing actually reaches — the disc, or the corner of whichever staff
@@ -282,7 +328,7 @@ const R_RIM = SHOW_STAVES
    than just the inked pixels — the target is small enough as it is. */
 function staffImage(parent, s) {
   const img = el('image', {
-    href: staffSrc(s.kind, s.n),
+    href: staffSrc(s.kind, s.n, s.both),
     x: s.x, y: s.y, width: s.w, height: s.h,
     preserveAspectRatio: 'xMidYMid meet',
     opacity: STAFF_OPACITY,
@@ -441,10 +487,14 @@ function draw() {
 
     // --- diminished (innermost), minor, then major names
     const [dmx, dmy] = pt(R_DIM_TEXT, mid);
-    text(labels, k.dim, {
+    const dimAttrs = {
       x: dmx, y: dmy, class: 'dim-label',
       'font-size': FS_DIM(twoNames(k.dim)), fill: textDim(i)
-    });
+    };
+    // the diminished ring is the narrowest band, so a dual name stacks rather than
+    // running "F°/E♯°" across it and colliding with the seams
+    if (twoNames(k.dim)) textLines(labels, k.dim.split('/'), dimAttrs);
+    else                 text(labels, k.dim, dimAttrs);
 
     const [mnx, mny] = pt(R_MINOR_TEXT, mid);
     text(labels, k.minor, {
