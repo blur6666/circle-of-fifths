@@ -1,4 +1,32 @@
-# Circle of Fifths visual lighting notes
+# Circle of Fifths
+
+An interactive circle of fifths for exploring major keys, relative minors,
+diminished chords, key signatures, diatonic chords, and modes.
+
+## Using the wheel
+
+- Choose whether the arrows and pointer drag move the **wheel** or the **mask**.
+- Use the arrows for one-key steps, or drag across the wheel for a free turn. On
+	release, the moving layer snaps to the nearest key position.
+- The highlighted window shows one complete major-key chord palette. The centre
+	reads the selected major key, and the panel lists its relative minor,
+	diminished chord, signature, diatonic chords, and modes.
+- Hover a staff to read its signature. Enable the metronome and adjust its BPM
+	in the upper-right corner.
+- The controls below the guide can hide the mask glow, wheel glow, or floating
+	degree-label animation.
+
+## Features
+
+- Twelve major-key sectors arranged clockwise by ascending fifths.
+- Relative-minor and diminished-chord rings, plus real staff images for key
+	signatures, including the combined Gb/F# signature.
+- A physical mask window that exposes the I, ii, iii, IV, V, vi, and vii°
+	harmonic material for the selected key.
+- Keyboard-accessible controls, pointer dragging, responsive single-column
+	layout, a reduced-motion fallback, and a subtle animated star field.
+
+## Visual system
 
 This project is built around a dark stage, a floating key window, and a handful of carefully tuned glow, shadow, and pulse effects. The effects are split between the SVG wheel scene (`script.js`) and the surrounding UI chrome (`style.css`).
 
