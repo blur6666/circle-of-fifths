@@ -606,8 +606,10 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   let raf  = null;
   let mode = null;                        // null | 'mask' | 'wheel'
   let wheelPowerDown = null;
+  let drag = null;
 
   const hint  = document.getElementById('hint');
+  const wheelSvg = document.getElementById('wheel');
   const moveMask = document.getElementById('move-mask');
   const hideMask = document.getElementById('hide-mask');
   const maskGlowToggle = document.getElementById('mask-glow-toggle');
@@ -706,8 +708,38 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     glide();
   }
 
+  function dragSpin(evt) {
+    if (!drag || !mode || evt.pointerId !== drag.pointerId) return;
+    const dx = evt.clientX - drag.lastX;
+    drag.lastX = evt.clientX;
+    const deg = dx * 0.45;
+    if (mode === 'mask') target.mask += deg;
+    else target.wheel -= deg;
+    showKey(keyIndex());
+    glide();
+  }
+
   steps.forEach(btn =>
     btn.addEventListener('click', () => step(Number(btn.dataset.step))));
+
+  if (wheelSvg) {
+    wheelSvg.addEventListener('pointerdown', evt => {
+      if (!mode) return;
+      drag = { pointerId: evt.pointerId, lastX: evt.clientX };
+      wheelSvg.setPointerCapture(evt.pointerId);
+    });
+    wheelSvg.addEventListener('pointermove', dragSpin);
+    wheelSvg.addEventListener('pointerup', evt => {
+      if (!drag || evt.pointerId !== drag.pointerId) return;
+      wheelSvg.releasePointerCapture(evt.pointerId);
+      drag = null;
+    });
+    wheelSvg.addEventListener('pointercancel', evt => {
+      if (!drag || evt.pointerId !== drag.pointerId) return;
+      try { wheelSvg.releasePointerCapture(evt.pointerId); } catch {}
+      drag = null;
+    });
+  }
 
   if (moveMask) {
     moveMask.addEventListener('change', () => {

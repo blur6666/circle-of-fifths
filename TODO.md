@@ -33,4 +33,4 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 // DONE 13. Add a small metronome to the top right corner. Let the user turn it on/off and change bpm, with a mechanical-style swing animation that follows the selected tempo.
 
-14. Let the user spin either the disk or the mask using the mouse 😲
+// DONE 14. Let the user spin either the disk or the mask by dragging the mouse over the wheel.
