@@ -48,7 +48,7 @@ const R_SIG        = (R_MAJOR + R_OUT)   / 2;   // where the key-signature graph
    very small once the wheel is capped to one screen — the diminished ring was
    landing near 8px — so these run larger than the study.
 
-   The `two` variants are for the one sector that carries both spellings (`G♭/F♯`).
+   The `two` variants are for the one sector that carries both spellings (`Gb/F#`).
    They are held back by *width*, not height: five glyphs have to clear the seams
    either side of a 30° sector. The diminished one is the exception — it breaks onto
    two lines instead of using a slash, so each line is as short as a normal label and
@@ -64,22 +64,22 @@ const SECTOR = 30;          // degrees per key
 // spellings and both key signatures. `dim` is the diminished chord of the key (vii°).
 const KEYS = [
   { major: 'C',       minor: 'a',       dim: 'B°',        sharps: 0,},
-  { major: 'G',       minor: 'e',       dim: 'F♯°',       sharps: 1 },
-  { major: 'D',       minor: 'b',       dim: 'C♯°',       sharps: 2 },
-  { major: 'A',       minor: 'f♯',      dim: 'G♯°',       sharps: 3 },
-  { major: 'E',       minor: 'c♯',      dim: 'D♯°',       sharps: 4 },
-  { major: 'B',       minor: 'g♯',      dim: 'A♯°',       sharps: 5 },
-  { major: 'G♭/F♯',   minor: 'e♭/d♯',   dim: 'F°/E♯°',    flats: 6, sharps: 6 },
-  { major: 'D♭',      minor: 'b♭',      dim: 'C°',        flats: 5 },
-  { major: 'A♭',      minor: 'f',       dim: 'G°',        flats: 4 },
-  { major: 'E♭',      minor: 'c',       dim: 'D°',        flats: 3 },
-  { major: 'B♭',      minor: 'g',       dim: 'A°',        flats: 2 },
+  { major: 'G',       minor: 'e',       dim: 'F#°',       sharps: 1 },
+  { major: 'D',       minor: 'b',       dim: 'C#°',       sharps: 2 },
+  { major: 'A',       minor: 'f#',      dim: 'G#°',       sharps: 3 },
+  { major: 'E',       minor: 'c#',      dim: 'D#°',       sharps: 4 },
+  { major: 'B',       minor: 'g#',      dim: 'A#°',       sharps: 5 },
+  { major: 'Gb/F#',   minor: 'eb/d#',   dim: 'F°/E#°',    flats: 6, sharps: 6 },
+  { major: 'Db',      minor: 'bb',      dim: 'C°',        flats: 5 },
+  { major: 'Ab',      minor: 'f',       dim: 'G°',        flats: 4 },
+  { major: 'Eb',      minor: 'c',       dim: 'D°',        flats: 3 },
+  { major: 'Bb',      minor: 'g',       dim: 'A°',        flats: 2 },
   { major: 'F',       minor: 'd',       dim: 'E°',        flats: 1 }
 ];
 
 // ----------------------------------------------------------------- colour
 /* Twelve hues, evenly spaced round the wheel: C amber at the top, walking through
-   green at A, blue at G♭/F♯ and magenta back round to F. Position becomes colour.
+   green at A, blue at Gb/F# and magenta back round to F. Position becomes colour.
    Set as SVG attributes, so they must be real colour values — Chrome does not
    resolve var() inside presentation attributes. */
 const hue = i => (45 + i * 30) % 360;
@@ -249,7 +249,7 @@ const staffSrc = (kind, n, both) =>
 const STAFF_CLEF = 4.29;
 
 /* Which staff a sector carries. Most name one or the other — a missing property means
-   zero, which is C. `G♭/F♯` names both, and takes the hybrid: `both` is [flats,
+   zero, which is C. `Gb/F#` names both, and takes the hybrid: `both` is [flats,
    sharps] and the kind/count fall back to the flat half for anything that needs one
    value. */
 const isDual = k => k.flats != null && k.sharps != null;
@@ -270,18 +270,18 @@ const staffBoxW = (kind, n, both) => both
 const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
 const FLAT_ORDER  = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
 
-/* What the staff says, in words: "E major — 4 sharps: F♯ C♯ G♯ D♯". Goes in a
+/* What the staff says, in words: "E major — 4 sharps: F# C# G# D#". Goes in a
    <title>, which Chrome shows on hover and screen readers announce, so the one
    element covers both. Worth having: the staves render around 22px tall, too small
    to count accidentals at a glance. */
 const accidentals = (kind, n) =>
   (kind === 'sharp' ? SHARP_ORDER : FLAT_ORDER)
-    .slice(0, n).map(note => note + (kind === 'sharp' ? '♯' : '♭')).join(' ');
+    .slice(0, n).map(note => note + (kind === 'sharp' ? '#' : 'b')).join(' ');
 
 const spelt = (kind, n) => `${n} ${kind}${n > 1 ? 's' : ''}: ${accidentals(kind, n)}`;
 
 function staffTitle(k, kind, n, both) {
-  // the hybrid holds two signatures, so it names both — "G♭/F♯" splits to match
+  // the hybrid holds two signatures, so it names both — "Gb/F#" splits to match
   if (both) {
     const [flatName, sharpName] = k.major.split('/');
     return `${flatName} major — ${spelt('flat', both[0])}`
@@ -468,9 +468,9 @@ function buildSpotlight(svg, defs) {
 /* The centre reads out whichever key the window is sitting on. */
 function sigText(k) {
   const parts = [];
-  if (k.flats)  parts.push(k.flats + '♭');
-  if (k.sharps) parts.push(k.sharps + '♯');
-  return parts.join('  /  ') || 'no ♯ or ♭';
+  if (k.flats)  parts.push(k.flats + 'b');
+  if (k.sharps) parts.push(k.sharps + '#');
+  return parts.join('  /  ') || 'no # or b';
 }
 
 function buildHub(svg) {
@@ -543,7 +543,7 @@ function draw() {
       'font-size': FS_DIM(twoNames(k.dim)), fill: textDim(i)
     };
     // the diminished ring is the narrowest band, so a dual name stacks rather than
-    // running "F°/E♯°" across it and colliding with the seams
+    // running "F°/E#°" across it and colliding with the seams
     upright(twoNames(k.dim) ? textLines(labels, k.dim.split('/'), dimAttrs)
                             : text(labels, k.dim, dimAttrs), dmx, dmy);
 

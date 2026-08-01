@@ -87,9 +87,9 @@ for n in 1 2 3 4 5 6 7; do
   src=$([ $n = 1 ] && echo "1sharp.svg" || echo "${n}sharps.svg")
   convert_one "$src" sharp "$n" "sharps-$n.png"
 done
-# 1-6 flats are on the wheel: sector 6 carries both spellings (G♭ = 6 flats alongside
-# F♯ = 6 sharps), then D♭ A♭ E♭ B♭ F. Only 7flats.svg is unused — raise this to 7 if a
-# C♭ spelling is ever wanted.
+# 1-6 flats are on the wheel: sector 6 carries both spellings (Gb = 6 flats alongside
+# F# = 6 sharps), then Db Ab Eb Bb F. Only 7flats.svg is unused — raise this to 7 if a
+# Cb spelling is ever wanted.
 FLATS_MAX=6
 
 echo "flats:"

@@ -7,8 +7,8 @@ PNGs the wheel actually loads:
     sharps-1.png … sharps-7.png
     flats-1.png  … flats-5.png
 
-Five flat keys are on the wheel — D♭ A♭ E♭ B♭ F. Positions 5 and 6 are spelled with
-sharps (B, F♯), so `6flats/7flats.svg` are kept as source in case that changes; raise
+Five flat keys are on the wheel — Db Ab Eb Bb F. Positions 5 and 6 are spelled with
+sharps (B, F#), so `6flats/7flats.svg` are kept as source in case that changes; raise
 `FLATS_MAX` in the script to build their PNGs again.
 
 Both are committed. Re-run `bash convert.sh` from this folder after changing an SVG.

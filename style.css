@@ -16,7 +16,7 @@
   --ink-2: #9a9bab;
   --ink-3: #6b7183;
   --accent: #7b4cff;     /* the violet that blooms off the mask edge */
-  /* Matches the family index.html actually loads. Roboto has no ♯ or ♭, and no
+  /* Matches the family index.html actually loads. Roboto has no # or b, and no
      music font is fetched any more, so those two fall through to whatever the
      system offers — Noto Sans Symbols 2 on Chrome OS. */
   --display: 'Roboto', system-ui, -apple-system, sans-serif;
@@ -437,7 +437,7 @@ body.armed-wheel #arm-ring {
    read-out — is one weight. Size and colour carry the hierarchy on their own, and
    at the size the inner rings actually render, bold just filled the counters in.
    Fills are per-sector and come from script.js as attributes; only the type is set
-   here. Accidentals (♯ ♭) have no glyph in Roboto and fall to a system font. */
+   here. Accidentals (# b) have no glyph in Roboto and fall to a system font. */
 .major-label, .minor-label, .dim-label, .count,
 .hub-key, .hub-sig {
   font-family: var(--display);

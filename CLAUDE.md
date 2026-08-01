@@ -1,6 +1,6 @@
 # Circle of Fifths
 
-Study aid for music theory. Solo amateur project, one user, Chrome on Chrome OS.
+Study aid for music theory. Solo amateur project, one user, Chrome on Windows.
 No build step, no dependencies, no tests, no framework. `index.html` + `style.css` +
 `script.js` — open index.html directly.
 
@@ -34,7 +34,7 @@ inside `<g id="disc">`; the hub read-out is drawn after, on top.
 
 Colours are JS constants, not CSS vars — Chrome won't resolve `var()` inside SVG
 presentation attributes. The palette is the design's **Nocturne**: dark stage, one
-hue per sector at `(45 + i*30) % 360`, so C is amber at the top, A green, G♭/F♯
+hue per sector at `(45 + i*30) % 360`, so C is amber at the top, A green, Gb/F#
 blue, F magenta back round. Fills/text are `oklch()` at fixed lightness per ring
 (`fillDim`/`fillMin`/`fillMaj`/`fillSig`, `textMaj`/`textMin`/`textDim`/`ink`) —
 change the hue formula and the whole wheel follows. Seams between sectors and
@@ -134,9 +134,9 @@ finds its own radius at its own rate. Transient, on black, left alone.
 ## No enharmonic sectors any more
 
 The wheel used to give C and the three at the bottom two spellings and two key
-signatures each — `D♭/C♯`, `G♭/F♯`, `C♭/B`. That is gone: every sector now has exactly
-one name per ring and one key signature. Sharps run 0-6 from C round to F♯, then the
-seam falls and flats run 5-1 from D♭ back to F. `flats-6/7.png` are orphaned by that
+signatures each — `Db/C#`, `Gb/F#`, `Cb/B`. That is gone: every sector now has exactly
+one name per ring and one key signature. Sharps run 0-6 from C round to F#, then the
+seam falls and flats run 5-1 from Db back to F. `flats-6/7.png` are orphaned by that
 and nothing loads them.
 
 If duals ever come back, note what bit last time: a key that names only `sharps: 0`
@@ -146,20 +146,20 @@ just that one. Hence the `|| 0` in `staffPart`.
 
 ### Why there is no sharp/flat switch, and what it costs
 
-A control to flip 5/6/7 between `B F♯ C♯` and `C♭ G♭ D♭` was considered and dropped.
+A control to flip 5/6/7 between `B F# C#` and `Cb Gb Db` was considered and dropped.
 It would not fix anything — it would only move which keys are wrong.
 
 The window spans three adjacent sectors (IV, I, V), so only five windows touch the
-enharmonic block: roots `E`, 5, 6, 7, and `A♭`. The other seven are correct under any
+enharmonic block: roots `E`, 5, 6, 7, and `Ab`. The other seven are correct under any
 spelling. Twelve sectors cannot hold fifteen keys, so **no layout gets all five
 right** — three is the ceiling, and four layouts tie at 10 of 12 overall:
 
 | positions 5, 6, 7 | correct | misspelled |
 |---|---|---|
-| B, F♯, C♯ | E, B, F♯ | C♯, A♭ |
-| **B, F♯, D♭** (ours) | E, B, A♭ | F♯, D♭ |
-| B, G♭, D♭ | E, D♭, A♭ | B, G♭ |
-| C♭, G♭, D♭ | G♭, D♭, A♭ | E, C♭ |
+| B, F#, C# | E, B, F# | C#, Ab |
+| **B, F#, Db** (ours) | E, B, Ab | F#, Db |
+| B, Gb, Db | E, Db, Ab | B, Gb |
+| Cb, Gb, Db | Gb, Db, Ab | E, Cb |
 
 The middle two are **mixed** — a sharp spelling next to a flat one — and that is
 musically fine. It is tempting to reason that the three must flip as a unit because
@@ -167,12 +167,12 @@ any *correct* window spells them uniformly; that inference is wrong, because two
 windows have to break whatever you choose, and mixed layouts simply break different
 ones.
 
-Position 7 is spelled `D♭`, chosen so that `A♭` major — much the most used key of the
+Position 7 is spelled `Db`, chosen so that `Ab` major — much the most used key of the
 group — reads correctly. **Two windows are knowingly wrong as a result, and are not
 bugs:**
 
-- `F♯` major shows its V as `D♭`, where the music says `C♯`.
-- `D♭` major shows its IV as `F♯`, where the music says `G♭`.
+- `F#` major shows its V as `Db`, where the music says `C#`.
+- `Db` major shows its IV as `F#`, where the music says `Gb`.
 
 Don't "fix" either in isolation. Repairing one breaks two others and the score stays
 10 of 12 whatever you do. Only change the spelling if the owner wants a different
@@ -348,13 +348,13 @@ controls down the left, the wheel given the whole middle of the window, and the
 reading of it on the right and on screen two. See "Two screens".
 
 **Now: the type pass.** Sizes and label colours have had one round — bigger, and
-brighter through the middle. Still open: the page moved to Roboto, which has no ♯
-or ♭, so those come from a system fallback and sit oddly next to the letters.
+brighter through the middle. Still open: the page moved to Roboto, which has no #
+or b, so those come from a system fallback and sit oddly next to the letters.
 
 Loose ends: `6flats.svg` wants re-exporting without its notes and barline (see
 `staves/README.md`), and `SHOW_COUNTS` has never been used since the staves landed —
 decide whether it stays.
 
-Known nit: Space Grotesk has no ♯ or ♭, so those fall through to Noto Music, whose
-glyphs sit low and large next to the letters. Visible on `D♭/C♯`, `f♯` and the
+Known nit: Space Grotesk has no # or b, so those fall through to Noto Music, whose
+glyphs sit low and large next to the letters. Visible on `Db/C#`, `f#` and the
 diminished ring.
