@@ -9,7 +9,7 @@
 
 One of the the mask on the circle of fifth's bigger value is that when it moves around, is that the position of the values keeps the same, so we automatically detect all notes, their degree, chord, etc
 
-2. Let's review together the animation effects added to the circle, because the only thing I see is the dashed dot rotating slowly.
+// DONE 2. Let's review together the animation effects added to the circle, because the only thing I see is the dashed dot rotating slowly.
 
 // DONE 3. Make the mask read as a physical cutout with a compact cast shadow and stronger outside scrim.
 
@@ -25,4 +25,4 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 9. Ther is a 5% chance that the degreeNumbers will pop away from their places when you rotate (the bug that was happening before some logic on the other direction rotation fixed i)
 
-10. Create README.md, List and briefly explain all shading/lighting effects used in the project
+// DONE 10. Create README.md, list and briefly explain all shading/lighting effects used in the project. Recommendation: dont cite line number but cite variable names (good time to see if they are descriptive enough)
