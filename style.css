@@ -396,7 +396,17 @@ body.wheel-powering-down #arm-hub-inner {
   letter-spacing: 0.04em;
 }
 
-.staff { cursor: help; }
+.staff {
+  cursor: help;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: staff-drift 4.2s ease-in-out infinite;
+}
+
+@keyframes staff-drift {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-1px) scale(1.01); }
+}
 
 .hover-container {
   transform-box: fill-box;

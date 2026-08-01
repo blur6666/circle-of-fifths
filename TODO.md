@@ -26,3 +26,9 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 9. Ther is a 5% chance that the degreeNumbers will pop away from their places when you rotate (the bug that was happening before some logic on the other direction rotation fixed i)
 
 // DONE 10. Create README.md, list and briefly explain all shading/lighting effects used in the project. Recommendation: dont cite line number but cite variable names (good time to see if they are descriptive enough)
+
+11. Add checkboxes to the bottom of the page to disable the glowing animation
+
+// DONE 12. Add a subtle staff drift animation so the signature staves feel less rigid and more natural while the disc is spinning.
+
+13. Add a small metronome to the top right corner. Let user turn on/off and change bpm. Animate it to the right bpm,like a mechanical metronome
