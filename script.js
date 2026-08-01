@@ -613,6 +613,8 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const maskGlowToggle = document.getElementById('mask-glow-toggle');
   const wheelGlowToggle = document.getElementById('wheel-glow-toggle');
   const degreeDroneToggle = document.getElementById('degree-drone-toggle');
+  const metronomeToggle = document.getElementById('metronome-toggle');
+  const metronomeBpm = document.getElementById('metronome-bpm');
   const steps = [...document.querySelectorAll('[data-step]')];
 
   const HINTS = {
@@ -727,6 +729,17 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     wheelGlowToggle.addEventListener('change', () => {
       document.body.classList.toggle('wheel-glow-off', wheelGlowToggle.checked);
     });
+  }
+  if (metronomeToggle && metronomeBpm) {
+    const syncMetronome = () => {
+      const bpm = Number(metronomeBpm.value) || 72;
+      const duration = Math.max(0.3, 60 / bpm);
+      document.body.classList.toggle('metronome-on', metronomeToggle.checked);
+      document.body.style.setProperty('--metronome-duration', `${duration}s`);
+    };
+    metronomeToggle.addEventListener('change', syncMetronome);
+    metronomeBpm.addEventListener('input', syncMetronome);
+    syncMetronome();
   }
   if (degreeDroneToggle) {
     degreeDroneToggle.addEventListener('change', () => {

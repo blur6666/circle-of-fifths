@@ -31,6 +31,6 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 // DONE 12. Add a subtle staff drift animation so the signature staves feel less rigid and more natural while the disc is spinning.
 
-13. Add a small metronome to the top right corner. Let user turn on/off and change bpm. Animate it to the right bpm,like a mechanical metronome
+// DONE 13. Add a small metronome to the top right corner. Let the user turn it on/off and change bpm, with a mechanical-style swing animation that follows the selected tempo.
 
 14. Let the user spin either the disk or the mask using the mouse 😲

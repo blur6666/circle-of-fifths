@@ -14,6 +14,22 @@
 <section class="screen" id="wheel-screen">
   <h1>The Circle of Fifths</h1>
 
+  <div class="metronome" aria-label="metronome controls">
+    <label class="metronome-toggle" for="metronome-toggle">
+      <input id="metronome-toggle" type="checkbox">
+      <span>metronome</span>
+    </label>
+    <div class="metronome-visual" aria-hidden="true">
+      <div class="metronome-stand"></div>
+      <div class="metronome-arm"></div>
+      <div class="metronome-weight"></div>
+    </div>
+    <label class="metronome-bpm" for="metronome-bpm">
+      <span>bpm</span>
+      <input id="metronome-bpm" type="range" min="40" max="180" value="72">
+    </label>
+  </div>
+
   <div class="stage">
 
     <div class="side">
