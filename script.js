@@ -410,6 +410,12 @@ function buildSpotlight(svg, defs) {
         armGlow.style.opacity = '0';
         return;
       }
+      if (document.body.classList.contains('mask-glow-off')) {
+        if (pulse) clearInterval(pulse);
+        pulse = null;
+        armGlow.style.opacity = '0';
+        return;
+      }
       if (prefersReducedMotion) {
         if (pulse) clearInterval(pulse);
         pulse = null;
@@ -604,6 +610,8 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const hint  = document.getElementById('hint');
   const moveMask = document.getElementById('move-mask');
   const hideMask = document.getElementById('hide-mask');
+  const maskGlowToggle = document.getElementById('mask-glow-toggle');
+  const wheelGlowToggle = document.getElementById('wheel-glow-toggle');
   const degreeDroneToggle = document.getElementById('degree-drone-toggle');
   const steps = [...document.querySelectorAll('[data-step]')];
 
@@ -707,6 +715,17 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   if (hideMask) {
     hideMask.addEventListener('change', () => {
       spot.setVisible(!hideMask.checked);
+    });
+  }
+  if (maskGlowToggle) {
+    maskGlowToggle.addEventListener('change', () => {
+      document.body.classList.toggle('mask-glow-off', maskGlowToggle.checked);
+      if (mode === 'mask') spot.setArmed(true);
+    });
+  }
+  if (wheelGlowToggle) {
+    wheelGlowToggle.addEventListener('change', () => {
+      document.body.classList.toggle('wheel-glow-off', wheelGlowToggle.checked);
     });
   }
   if (degreeDroneToggle) {

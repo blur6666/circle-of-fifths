@@ -306,21 +306,33 @@ body.armed-wheel .hint { color: var(--ink-2); }
 .prose h2:first-child { margin-top: 0; }
 .prose p { margin: 0 0 10px; }
 
+.glow-toggle,
 .degree-drone-toggle {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-  padding: 0 26px 22px;
+  padding: 0 26px 8px;
   color: var(--ink-2);
   font-size: 13px;
   cursor: pointer;
 }
+.glow-toggle input,
 .degree-drone-toggle input {
   width: 14px;
   height: 14px;
   margin: 0;
   accent-color: var(--accent);
+}
+body.mask-glow-off .arm-glow {
+  opacity: 0;
+}
+body.wheel-glow-off #arm-ring,
+body.wheel-glow-off #arm-ring-outer,
+body.wheel-glow-off #arm-hub,
+body.wheel-glow-off #arm-hub-inner {
+  animation: none;
+  opacity: 0.38;
 }
 
 .chords {
