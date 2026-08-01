@@ -35,7 +35,7 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 // DONE 14. Let the user spin either the disk or the mask by dragging the mouse over the wheel.
 
-15. Read, look, think and rewrite the "How to read it" Section. Also in this task find a solution for this element overlap and overcrowd in the main screen ![alt text](image.png)
+// DONE 15. Read, look, think and rewrite the "How to read it" Section. Also in this task find a solution for this element overlap and overcrowd in the main screen ![alt text](image.png)
 
 16. Create a background themed in space. It should be very dark, the same color as today, with little movement.
 
