@@ -13,15 +13,17 @@ const SHOW_COUNTS = false;
 
 // ---------------------------------------------------------------- geometry
 const CX = 500, CY = 500;
-const R_HUB   = 113;   // blank centre
-const R_MINOR = 193;   // outer edge of the minor ring
-const R_MAJOR = 268;   // outer edge of the major ring
-const R_SIGS  = 470;   // outer edge once the key signatures are shown
+const R_HUB   = 62;    // blank centre
+const R_DIM   = 144;   // outer edge of the diminished ring
+const R_MINOR = 208;   // outer edge of the minor ring
+const R_MAJOR = 274;   // outer edge of the major ring
+const R_SIGS  = 444;   // outer edge once the key signatures are shown
 const R_OUT   = SHOW_KEY_SIGNATURES ? R_SIGS : R_MAJOR;
 
-const R_MINOR_TEXT = 152;
-const R_MAJOR_TEXT = 229;
-const R_SIG        = 372;   // where the key-signature graphics sit
+const R_DIM_TEXT   = 124;
+const R_MINOR_TEXT = 176;
+const R_MAJOR_TEXT = 241;
+const R_SIG        = 359;   // where the key-signature graphics sit
 
 const SECTOR = 30;          // degrees per key
 
@@ -42,19 +44,20 @@ const SHARP_SLOT = { F: 'L0', C: 'S1', G: 'L3', D: 'L1', A: 'S2', E: 'S0', B: 'L
 const FLAT_SLOT  = { B: 'L2', E: 'S0', A: 'S2', D: 'L1', G: 'L3', C: 'S1', F: 'L0' };
 
 // Clockwise from the top. `dual` keys show both spellings and both key signatures.
+// `dim` is the diminished chord of that key (the vii°).
 const KEYS = [
-  { major: 'C',           minor: 'a',            flats: 0, sharps: 0, dual: true  },
-  { major: 'G',           minor: 'e',            sharps: 1 },
-  { major: 'D',           minor: 'b',            sharps: 2 },
-  { major: 'A',           minor: 'f♯',      sharps: 3 },
-  { major: 'E',           minor: 'c♯',      sharps: 4 },
-  { major: 'C♭/B',   minor: 'a♭/g♯', flats: 7, sharps: 5, dual: true },
-  { major: 'G♭/F♯', minor: 'e♭/d♯', flats: 6, sharps: 6, dual: true },
-  { major: 'D♭/C♯', minor: 'b♭/a♯', flats: 5, sharps: 7, dual: true },
-  { major: 'A♭',     minor: 'f',            flats: 4 },
-  { major: 'E♭',     minor: 'c',            flats: 3 },
-  { major: 'B♭',     minor: 'g',            flats: 2 },
-  { major: 'F',           minor: 'd',            flats: 1 }
+  { major: 'C',       minor: 'a',       dim: 'B°',        flats: 0, sharps: 0, dual: true },
+  { major: 'G',       minor: 'e',       dim: 'F♯°',       sharps: 1 },
+  { major: 'D',       minor: 'b',       dim: 'C♯°',       sharps: 2 },
+  { major: 'A',       minor: 'f♯',      dim: 'G♯°',       sharps: 3 },
+  { major: 'E',       minor: 'c♯',      dim: 'D♯°',       sharps: 4 },
+  { major: 'C♭/B',    minor: 'a♭/g♯',   dim: 'B♭°/A♯°',   flats: 7, sharps: 5, dual: true },
+  { major: 'G♭/F♯',   minor: 'e♭/d♯',   dim: 'F°/E♯°',    flats: 6, sharps: 6, dual: true },
+  { major: 'D♭/C♯',   minor: 'b♭/a♯',   dim: 'C°/B♯°',    flats: 5, sharps: 7, dual: true },
+  { major: 'A♭',      minor: 'f',       dim: 'G°',        flats: 4 },
+  { major: 'E♭',      minor: 'c',       dim: 'D°',        flats: 3 },
+  { major: 'B♭',      minor: 'g',       dim: 'A°',        flats: 2 },
+  { major: 'F',       minor: 'd',       dim: 'E°',        flats: 1 }
 ];
 
 // Hue per sector, walking the wheel: cool blues down the sharp side, warm reds
@@ -63,14 +66,26 @@ const HUES = [0, 210, 222, 235, 248, 262, 285, 320, 345, 358, 8, 12];
 const ink   = i => `hsl(${HUES[i]} 45% 33%)`;
 const solid = i => `hsl(${HUES[i]} 45% 46%)`;
 
+/* Only labels carrying two spellings get shrunk to fit. Note this is NOT the same
+   as the sector's `dual` flag: C is dual (it draws two staff grids) but its names
+   are single, so C / a / B° stay full size like their neighbours. */
+const twoNames = s => s.includes('/');
+
 // Set as SVG attributes, so they must be real colours — Chrome does not resolve
 // var() inside presentation attributes. Keep in sync with style.css.
 const C_RING_OUTER = '#ffffff';
 const C_RING_MAJOR = '#ededed';
 const C_RING_MINOR = '#dcdcdc';
-const C_HUB        = '#cfcbcb';
+const C_RING_DIM   = '#cbcbcb';
+const C_HUB        = '#bdbaba';
 const C_LINE       = '#9a9a9a';
 const C_CELL       = '#b9b9b9';
+
+// The mask: a window 3 sectors wide over the staff, major and minor rings, and
+// 1 sector wide over the diminished ring.
+const C_SCRIM      = '#f4f4f5';
+const SCRIM_ALPHA  = 0.82;
+const C_MASK_EDGE  = '#8b2f2f';
 
 // ------------------------------------------------------------------ helpers
 function pt(r, deg) {
@@ -99,6 +114,11 @@ function ringSector(r1, r2, a0, a1) {
   const [x2, y2] = pt(r1, a1), [x3, y3] = pt(r1, a0);
   return `M${x0} ${y0} A${r2} ${r2} 0 0 1 ${x1} ${y1} ` +
          `L${x2} ${y2} A${r1} ${r1} 0 0 0 ${x3} ${y3} Z`;
+}
+
+function circlePath(r) {
+  return `M${CX - r} ${CY} A${r} ${r} 0 1 0 ${CX + r} ${CY} ` +
+         `A${r} ${r} 0 1 0 ${CX - r} ${CY} Z`;
 }
 
 /* Which staff slots are filled for `count` accidentals of the given kind. */
@@ -143,6 +163,43 @@ function staffGrid(parent, x, y, count, kind, sectorIndex) {
   return g;
 }
 
+// -------------------------------------------------------------------- mask
+/* The window, drawn over sector 0 (straight up); the whole group is rotated to
+   move it. Wide part = 3 sectors, from the minor ring out; narrow part = 1
+   sector, over the diminished ring only. */
+function windowPath() {
+  const w = SECTOR * 1.5;   // 45° — half-width of the 3-cell part
+  const n = SECTOR * 0.5;   // 15° — half-width of the 1-cell part
+  const [ax, ay] = pt(R_OUT, -w), [bx, by] = pt(R_OUT, w);
+  const [cx, cy] = pt(R_DIM,  w), [dx, dy] = pt(R_DIM,  n);
+  const [ex, ey] = pt(R_HUB,  n), [fx, fy] = pt(R_HUB, -n);
+  const [gx, gy] = pt(R_DIM, -n), [hx, hy] = pt(R_DIM, -w);
+  return `M${ax} ${ay} A${R_OUT} ${R_OUT} 0 0 1 ${bx} ${by}` +
+         ` L${cx} ${cy} A${R_DIM} ${R_DIM} 0 0 0 ${dx} ${dy}` +
+         ` L${ex} ${ey} A${R_HUB} ${R_HUB} 0 0 0 ${fx} ${fy}` +
+         ` L${gx} ${gy} A${R_DIM} ${R_DIM} 0 0 0 ${hx} ${hy} Z`;
+}
+
+function buildMask(parent) {
+  const g = el('g', { id: 'mask' }, parent);
+  const win = windowPath();
+
+  // scrim: the whole wheel minus the window, so everything outside fades back
+  el('path', {
+    d: `${circlePath(R_OUT)} ${circlePath(R_HUB)} ${win}`,
+    'fill-rule': 'evenodd',
+    fill: C_SCRIM,
+    opacity: SCRIM_ALPHA
+  }, g);
+
+  el('path', {
+    d: win, fill: 'none', stroke: C_MASK_EDGE,
+    'stroke-width': 3.5, 'stroke-linejoin': 'round'
+  }, g);
+
+  return g;
+}
+
 // ------------------------------------------------------------------- render
 function draw() {
   const svg = document.getElementById('wheel');
@@ -164,7 +221,8 @@ function draw() {
       el('path', { d: ringSector(R_MAJOR, R_OUT, a0, a1), fill: C_RING_OUTER }, bg);
     }
     el('path', { d: ringSector(R_MINOR, R_MAJOR, a0, a1), fill: C_RING_MAJOR }, bg);
-    el('path', { d: ringSector(R_HUB,   R_MINOR, a0, a1), fill: C_RING_MINOR }, bg);
+    el('path', { d: ringSector(R_DIM,   R_MINOR, a0, a1), fill: C_RING_MINOR }, bg);
+    el('path', { d: ringSector(R_HUB,   R_DIM,   a0, a1), fill: C_RING_DIM   }, bg);
 
     // divider between this sector and the next
     const [dx0, dy0] = pt(R_HUB, a1), [dx1, dy1] = pt(R_OUT, a1);
@@ -173,24 +231,24 @@ function draw() {
       stroke: ink(i), 'stroke-width': 1.4, opacity: 0.55
     }, strokes);
 
-    // --- minor (inner) and major (middle) names
+    // --- diminished (innermost), minor, then major names
+    const [dmx, dmy] = pt(R_DIM_TEXT, mid);
+    text(labels, k.dim, {
+      x: dmx, y: dmy, class: 'dim-label',
+      'font-size': twoNames(k.dim) ? 15 : 21, fill: ink(i)
+    });
+
     const [mnx, mny] = pt(R_MINOR_TEXT, mid);
     text(labels, k.minor, {
       x: mnx, y: mny, class: 'minor-label',
-      'font-size': k.dual ? 21 : 27, fill: ink(i)
+      'font-size': twoNames(k.minor) ? 21 : 27, fill: ink(i)
     });
 
     const [mjx, mjy] = pt(R_MAJOR_TEXT, mid);
     text(labels, k.major, {
       x: mjx, y: mjy, class: 'major-label',
-      'font-size': k.dual ? 29 : 40, fill: ink(i)
+      'font-size': twoNames(k.major) ? 29 : 40, fill: ink(i)
     });
-
-    // the top sector doubles as the legend, like the reference chart
-    if (i === 0) {
-      text(labels, 'Major', { x: mjx, y: mjy + 27, class: 'qualifier', 'font-size': 17 });
-      text(labels, 'minor', { x: mnx, y: mny + 20, class: 'qualifier', 'font-size': 15 });
-    }
 
     // --- outer ring: key signature graphic(s) + accidental count
     if (!SHOW_KEY_SIGNATURES) {
@@ -248,12 +306,59 @@ function draw() {
 
   // hub + ring outlines on top of everything
   el('circle', { cx: CX, cy: CY, r: R_HUB, fill: C_HUB }, strokes);
-  [...new Set([R_HUB, R_MINOR, R_MAJOR, R_OUT])].forEach(r => {
+  [...new Set([R_HUB, R_DIM, R_MINOR, R_MAJOR, R_OUT])].forEach(r => {
     el('circle', {
       cx: CX, cy: CY, r,
       fill: 'none', stroke: C_LINE, 'stroke-width': 1.2, opacity: 0.55
     }, strokes);
   });
+
+  // the mask sits on top of the lot
+  wireControls(buildMask(svg));
+}
+
+// ---------------------------------------------------------------- controls
+/* The mask is placed with the SVG rotate(angle cx cy) attribute rather than a CSS
+   transform: with the viewBox offset away from the origin, transform-box/
+   transform-origin put the pivot in the wrong place. Hence the hand-rolled tween. */
+function wireControls(mask) {
+  let selected = 0;    // index into KEYS; 0 = C at the top
+  let current  = 0;    // angle actually drawn, in degrees
+  let raf = null;
+
+  const setAngle = a => mask.setAttribute('transform', `rotate(${a} ${CX} ${CY})`);
+
+  function glideTo(target) {
+    if (raf) cancelAnimationFrame(raf);
+    const from  = current;
+    const delta = ((target - from + 540) % 360) - 180;   // take the short way round
+    const start = performance.now();
+    const DUR   = 320;
+
+    const step = now => {
+      const t = Math.min(1, (now - start) / DUR);
+      const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      current = from + delta * e;
+      setAngle(current);
+      if (t < 1) raf = requestAnimationFrame(step);
+      else { current = ((target % 360) + 360) % 360; setAngle(current); raf = null; }
+    };
+    raf = requestAnimationFrame(step);
+  }
+
+  document.querySelectorAll('[data-step]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selected = (selected + Number(btn.dataset.step) + KEYS.length) % KEYS.length;
+      glideTo(selected * SECTOR);
+    });
+  });
+
+  const toggle = document.getElementById('mask-toggle');
+  const show = () => { mask.style.display = toggle.checked ? '' : 'none'; };
+  toggle.addEventListener('change', show);
+
+  setAngle(0);
+  show();
 }
 
 draw();

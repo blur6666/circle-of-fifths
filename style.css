@@ -3,13 +3,14 @@
    real CSS rules below belong here. */
 :root {
   --cell-text: #444444;
+  --accent: #8b2f2f;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  padding: 16px 16px 40px;
+  padding: 8px 16px 32px;
   background: #f4f4f5;
   color: #222;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -19,31 +20,98 @@ body {
 }
 
 h1 {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
-  margin: 8px 0 12px;
+  margin: 2px 0 6px;
   letter-spacing: -0.01em;
 }
 
-/* Sized by width only, on purpose. Capping by viewport height shrank the wheel to
-   ~645px on a 1366x768 Chromebook and the little staff letters became unreadable;
-   better to fill the width and scroll a bit. */
+/* Capped three ways so the wheel and both arrow rows fit one screen without
+   scrolling. The 132px is the page chrome above and below it (title + two control
+   rows); raise the 950px cap or that subtraction if you want it bigger. Note the
+   staff-grid letters get hard to read much below ~700px across. */
 #wheel {
-  width: min(94vw, 950px);
+  width: min(94vw, 950px, calc(100vh - 132px));
   height: auto;
   display: block;
 }
 
+/* ------------------------------------------------------------- controls */
+/* Three columns so the arrows sit centred on the wheel regardless of what else is
+   in the row; the switch rides off to the side without shoving them left. */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: min(94vw, 950px);
+  margin: 5px 0;
+}
+
+.arrows {
+  grid-column: 2;
+  display: flex;
+  gap: 14px;
+}
+
+.arrow {
+  width: 46px;
+  height: 34px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #333;
+  background: #fff;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+}
+.arrow:hover  { background: #f0f0f0; }
+.arrow:active { background: #e3e3e3; }
+
+.switch {
+  grid-column: 3;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  margin-left: 26px;
+}
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.track {
+  width: 38px;
+  height: 21px;
+  border-radius: 11px;
+  background: #c4c4c4;
+  position: relative;
+  transition: background 0.15s;
+}
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s;
+}
+.switch input:checked + .track            { background: var(--accent); }
+.switch input:checked + .track .knob      { left: 19px; }
+.switch input:focus-visible + .track      { outline: 2px solid #666; outline-offset: 2px; }
+
 /* --- SVG text --- */
 .major-label { font-weight: 700; }
 .minor-label { font-weight: 600; }
-.qualifier   { font-weight: 400; fill: #333; }
+.dim-label   { font-weight: 600; }
 .count       { font-weight: 700; }
 .cell-letter { font-weight: 600; fill: var(--cell-text); }
 .cell-letter.on { fill: #ffffff; }
 
 .legend {
-  max-width: 640px;
+  max-width: 680px;
   margin: 18px auto 0;
   font-size: 13px;
   line-height: 1.55;

@@ -10,17 +10,40 @@
 
 <h1>The Circle of Fifths</h1>
 
-<svg id="wheel" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"
+<div class="controls">
+  <div class="arrows">
+    <button class="arrow" data-step="-1" aria-label="Previous key">&lsaquo;</button>
+    <button class="arrow" data-step="1" aria-label="Next key">&rsaquo;</button>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="mask-toggle" checked>
+    <span class="track"><span class="knob"></span></span>
+    <span class="switch-text">Mask</span>
+  </label>
+</div>
+
+<svg id="wheel" xmlns="http://www.w3.org/2000/svg"
      role="img" aria-label="Circle of fifths chart"></svg>
 
+<div class="controls">
+  <div class="arrows">
+    <button class="arrow" data-step="-1" aria-label="Previous key">&lsaquo;</button>
+    <button class="arrow" data-step="1" aria-label="Next key">&rsaquo;</button>
+  </div>
+</div>
+
 <p class="legend">
-  <strong>Outer ring</strong> — the key signature on the treble staff.
-  Left column = the five lines (F D B G E), right column = the four spaces (E C A F).
-  Filled boxes are the notes that get a sharp or a flat.
+  Rings, outside in — <strong>key signature</strong> on the treble staff (left column =
+  the five lines F D B G E, right column = the four spaces E C A F; filled boxes are the
+  notes that get a sharp or a flat), <strong>major key</strong>,
+  <strong>relative minor</strong>, <strong>diminished chord</strong> of the key.
   <br>
-  <strong>Middle ring</strong> — major key. <strong>Inner ring</strong> — its relative minor.
   The top sector and the three at the bottom show two spellings of the same pitch, so they
   carry two key signatures: flat spelling on the left, sharp spelling on the right.
+  <br>
+  The <strong>mask</strong> fades everything but one key: three majors, their three
+  relative minors, the three key signatures, and the one diminished chord in the middle.
+  Use the arrows to step round the circle.
   <br>
   The accidental-count numbers are switched off for now —
   set <code>SHOW_COUNTS = true</code> at the top of <code>script.js</code> to bring them back.
