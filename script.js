@@ -1,91 +1,142 @@
 /* Circle of fifths — draws the wheel into #wheel as SVG.
-   Angles: 0 = 12 o'clock, increasing clockwise. */
+   Angles: 0 = 12 o'clock, increasing clockwise.
+
+   Styling follows the "Nocturne" study: dark stage, twelve hues spaced evenly
+   round the circle so position becomes colour, and the mask as a spotlight —
+   outside it the disc is blurred and desaturated as well as dimmed. */
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 
-/* The outer ring with the key-signature staff grids. */
-const SHOW_KEY_SIGNATURES = true;
+/* The outer coloured band. **Off**: it existed only to hold the key signatures, and
+   they no longer sit inside it — they hang off the rim at a fixed size and overrun
+   it, so the band was left as an empty ring of colour. Turn it back on to get it
+   back; the staves don't move either way, they just start further out. */
+const SHOW_KEY_SIGNATURES = false;
 
-/* The accidental-count numbers printed next to those grids (0, 1, 2 ... and the
+/* The staff PNGs that go in that band. Turn this **off** to empty the ring while
+   working on the rest of the wheel — and keep it off if `staves/` is ever cleared,
+   since an <image> pointing at a missing file draws Chrome's broken-image icon,
+   which is worse than nothing. See staves/README.md. */
+const SHOW_STAVES = true;
+
+/* The accidental-count numbers printed next to the staves (0, 1, 2 ... and the
    5b / 7# pairs on the enharmonic sectors). Parked for now — flip to true to bring
-   them back; the grids re-centre themselves to make room. */
+   them back; the staves re-centre themselves to make room. */
 const SHOW_COUNTS = false;
 
 // ---------------------------------------------------------------- geometry
+/* Ring radii are the design's `emphasis-major` preset, scaled from its 760-unit
+   stage to the 1000-unit one this file has always drawn in (x 1000/760). The
+   diminished ring is a thin inner collar — it carries one short label and doesn't
+   need a third of the radius; minors and majors take the middle, and the signature
+   band is wide enough for a proper staff when we get to it. */
 const CX = 500, CY = 500;
-const R_HUB   = 62;    // blank centre
-const R_DIM   = 144;   // outer edge of the diminished ring
-const R_MINOR = 208;   // outer edge of the minor ring
-const R_MAJOR = 274;   // outer edge of the major ring
-const R_SIGS  = 444;   // outer edge once the key signatures are shown
+const R_HUB   = 80;    // blank centre
+const R_DIM   = 178;   // outer edge of the diminished ring
+const R_MINOR = 293;   // outer edge of the minor ring
+const R_MAJOR = 400;   // outer edge of the major ring
+const R_SIGS  = 500;   // outer edge once the key signatures are shown
 const R_OUT   = SHOW_KEY_SIGNATURES ? R_SIGS : R_MAJOR;
 
-const R_DIM_TEXT   = 124;
-const R_MINOR_TEXT = 176;
-const R_MAJOR_TEXT = 241;
-const R_SIG        = 359;   // where the key-signature graphics sit
+// Each label sits in the middle of its band, and is sized off that band's width.
+const R_DIM_TEXT   = (R_HUB   + R_DIM)   / 2;
+const R_MINOR_TEXT = (R_DIM   + R_MINOR) / 2;
+const R_MAJOR_TEXT = (R_MINOR + R_MAJOR) / 2;
+const R_SIG        = (R_MAJOR + R_OUT)   / 2;   // where the key-signature graphics sit
+
+/* Fraction of the band each label takes. The design's numbers left the inner rings
+   very small once the wheel is capped to one screen — the diminished ring was
+   landing near 8px — so these run larger than the study. The two-name variants are
+   held back by width, not height: `B♭°/A♯°` has to clear the seams either side of a
+   30° sector at r=137, which is only ~72 units wide. */
+const FS_MAJOR = two => (R_MAJOR - R_MINOR) * (two ? 0.99  : 0.54);  
+const FS_MINOR = two => (R_MINOR - R_DIM)   * (two ? 0.99  : 0.42);
+const FS_DIM   = two => (R_DIM   - R_HUB)   * (two ? 0.99  : 0.3);
 
 const SECTOR = 30;          // degrees per key
 
 // ------------------------------------------------------------------- data
-// The key signature grid is a treble staff: five lines + four spaces.
-const LINES  = ['F', 'D', 'B', 'G', 'E'];   // top to bottom
-const SPACES = ['E', 'C', 'A', 'F'];        // top to bottom, offset half a step
-
-const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-const FLAT_ORDER  = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
-
-// Where each accidental lands on the grid: 'L<i>' = line, 'S<i>' = space.
-// The reference chart uses one fixed box per note *name*, so the sharp and flat
-// maps are identical and the two duplicate boxes (bottom line E, bottom space F)
-// are never filled. Verified against the chart: its 7-flat grid fills the top-line
-// F, not the bottom-space F, even though a real Cb key signature writes Fb there.
-const SHARP_SLOT = { F: 'L0', C: 'S1', G: 'L3', D: 'L1', A: 'S2', E: 'S0', B: 'L2' };
-const FLAT_SLOT  = { B: 'L2', E: 'S0', A: 'S2', D: 'L1', G: 'L3', C: 'S1', F: 'L0' };
-
 // Clockwise from the top. `dual` keys show both spellings and both key signatures.
 // `dim` is the diminished chord of that key (the vii°).
 const KEYS = [
-  { major: 'C',       minor: 'a',       dim: 'B°',        flats: 0, sharps: 0, dual: true },
+  { major: 'C',       minor: 'a',       dim: 'B°',        sharps: 0,},
   { major: 'G',       minor: 'e',       dim: 'F♯°',       sharps: 1 },
   { major: 'D',       minor: 'b',       dim: 'C♯°',       sharps: 2 },
   { major: 'A',       minor: 'f♯',      dim: 'G♯°',       sharps: 3 },
   { major: 'E',       minor: 'c♯',      dim: 'D♯°',       sharps: 4 },
-  { major: 'C♭/B',    minor: 'a♭/g♯',   dim: 'B♭°/A♯°',   flats: 7, sharps: 5, dual: true },
-  { major: 'G♭/F♯',   minor: 'e♭/d♯',   dim: 'F°/E♯°',    flats: 6, sharps: 6, dual: true },
-  { major: 'D♭/C♯',   minor: 'b♭/a♯',   dim: 'C°/B♯°',    flats: 5, sharps: 7, dual: true },
+  { major: 'B',       minor: 'g♯',      dim: 'A♯°',       sharps: 5 },
+  { major: 'F♯',      minor: 'd♯',      dim: 'E♯°',       sharps: 6 },
+  { major: 'C♯',      minor: 'a♯',      dim: 'B♯°',       sharps: 7 },
   { major: 'A♭',      minor: 'f',       dim: 'G°',        flats: 4 },
   { major: 'E♭',      minor: 'c',       dim: 'D°',        flats: 3 },
   { major: 'B♭',      minor: 'g',       dim: 'A°',        flats: 2 },
   { major: 'F',       minor: 'd',       dim: 'E°',        flats: 1 }
 ];
 
-// Hue per sector, walking the wheel: cool blues down the sharp side, warm reds
-// back up the flat side, with the red/blue seam at the top like the reference.
-const HUES = [0, 210, 222, 235, 248, 262, 285, 320, 345, 358, 8, 12];
-const ink   = i => `hsl(${HUES[i]} 45% 33%)`;
-const solid = i => `hsl(${HUES[i]} 45% 46%)`;
+// ----------------------------------------------------------------- colour
+/* Twelve hues, evenly spaced round the wheel: C amber at the top, walking through
+   green at A, blue at G♭/F♯ and magenta back round to F. Position becomes colour.
+   Set as SVG attributes, so they must be real colour values — Chrome does not
+   resolve var() inside presentation attributes. */
+const hue = i => (45 + i * 30) % 360;
+
+const fillDim = i => `oklch(0.26 0.05 ${hue(i)})`;
+const fillMin = i => `oklch(0.305 0.075 ${hue(i)})`;
+const fillMaj = i => `oklch(0.37 0.1 ${hue(i)})`;
+const fillSig = i => `oklch(0.215 0.035 ${hue(i)})`;
+
+/* The study stepped these down as you move inward — 0.91 / 0.84 / 0.75 — which
+   reads as depth on a big canvas but leaves the middle of the wheel muddy at the
+   size this actually renders at. The inner bands are the *darkest* fills (0.305 and
+   0.26), so holding all three labels near the same lightness gives the centre more
+   contrast, not less, and the size difference still carries the hierarchy. */
+const textMaj = i => `oklch(0.95 0.15 ${hue(i)})`;
+const textMin = i => `oklch(0.93 0.13 ${hue(i)})`;
+const textDim = i => `oklch(0.91 0.11 ${hue(i)})`;
+const ink     = i => `oklch(0.88 0.13 ${hue(i)})`;   // key-signature marks
+
+const C_STAGE   = '#0a0b0f';   // the dark behind everything; also every seam
+const C_DISC    = '#141720';   // under the sectors, so the seams read as gaps
+const C_HUB     = '#0a0b0f';
+const C_HUB_RIM = '#3a4058';
+const C_HUB_SUB = '#aab0c4';   // on a near-black hub, the study's #6b7183 vanished
+const SEAM_W    = 2.6;
 
 /* Only labels carrying two spellings get shrunk to fit. Note this is NOT the same
-   as the sector's `dual` flag: C is dual (it draws two staff grids) but its names
-   are single, so C / a / B° stay full size like their neighbours. */
+   as the sector's `dual` flag: C is dual (both spellings of it are written the same
+   way) but its names are single, so C / a / B° stay full size like their
+   neighbours. */
 const twoNames = s => s.includes('/');
 
-// Set as SVG attributes, so they must be real colours — Chrome does not resolve
-// var() inside presentation attributes. Keep in sync with style.css.
-const C_RING_OUTER = '#ffffff';
-const C_RING_MAJOR = '#ededed';
-const C_RING_MINOR = '#dcdcdc';
-const C_RING_DIM   = '#cbcbcb';
-const C_HUB        = '#bdbaba';
-const C_LINE       = '#9a9a9a';
-const C_CELL       = '#b9b9b9';
-
-// The mask: a window 3 sectors wide over the staff, major and minor rings, and
-// 1 sector wide over the diminished ring.
-const C_SCRIM      = '#f4f4f5';
-const SCRIM_ALPHA  = 0.82;
-const C_MASK_EDGE  = '#8b2f2f';
+// -------------------------------------------------------------- spotlight
+/* The mask: a window 3 sectors wide over the staff, major and minor rings, and
+   1 sector wide over the diminished ring. Everything outside it is blurred,
+   desaturated and dimmed, so peripheral keys stay recognisable as shapes without
+   competing for attention. All three are dialled here. */
+/* How far the outside is dimmed towards C_STAGE. This is the spotlight — at 0.13 it
+   was worth about 11% and the unlit keys read as fully lit. Luminance does the work
+   here rather than SPOT_SAT, because dimming reads as "further away" while draining
+   colour reads as "out of focus", which is the thing that looked wrong. */
+const SCRIM_ALPHA = 0.31;
+/* Blur is **off**, and at 1 it was doing nothing anyway — removing the primitive
+   left the render pixel-identical, because 1 user unit is about half a screen pixel
+   at the size this draws. Don't reach for this to explain a soft-looking label: the
+   labels lose apparent sharpness outside the window because SPOT_SAT drains their
+   colour and the scrim flattens the contrast against the sector behind them, not
+   because anything is resampled. Measured: edge energy is the same either side of
+   the window, saturation drops by a third. */
+const SPOT_BLUR   = 0;      // feGaussianBlur, in user units
+const SPOT_SAT    = 0.90;   // saturation kept outside the window
+/* The window's edge is a solid grey, not a translucent white. It runs straight over
+   the stage-coloured seams between sectors, and at 0.85 those showed through and
+   left the line looking dirty and uneven along its length. This is roughly what the
+   translucent version composited to over the dark, but it now reads the same
+   wherever it crosses. */
+const C_MASK_EDGE = '#c1c4d6';
+const MASK_EDGE_A = 1;
+const MASK_EDGE_W = 4.6;    // the window's hairline, in user units
+const C_MASK_GLOW = 'rgba(150,120,255,.75)';
+const MASK_GLOW_R = 21;
 
 // ------------------------------------------------------------------ helpers
 function pt(r, deg) {
@@ -121,52 +172,135 @@ function circlePath(r) {
          `A${r} ${r} 0 1 0 ${CX - r} ${CY} Z`;
 }
 
-/* Which staff slots are filled for `count` accidentals of the given kind. */
-function filledSlots(count, kind) {
-  const order = kind === 'sharp' ? SHARP_ORDER : FLAT_ORDER;
-  const slots = kind === 'sharp' ? SHARP_SLOT : FLAT_SLOT;
-  const set = new Set();
-  for (let i = 0; i < count; i++) set.add(slots[order[i]]);
-  return set;
+// ------------------------------------------------------- key signature PNGs
+/* The signature ring shows a picture of the real staff, one PNG per key
+   signature. Drop them in `staves/`:
+
+     none.png                     C — clef and bare staff, no accidentals
+     sharps-1.png … sharps-7.png
+     flats-1.png  … flats-7.png
+
+   They are built from the LilyPond SVGs alongside them by `staves/convert.sh`,
+   which cuts the bass half off each grand staff and normalises the vertical window
+   so every file is the same height with the staff in the same place. Re-run it if
+   the SVGs change; re-measure the three numbers below if its output size does.
+
+   Ink colour is baked into the PNG — a cool grey, dark enough not to outshout the
+   key names it sits beside. That's the trade for using pictures: the staves can't
+   take the sector's hue the way the ring labels do. */
+const STAFF_DIR = 'staves';
+
+/* Every staff is drawn at exactly this size — one staff-line gap, in user units.
+   It is a chosen number, not a solved one, and that is the whole point: the wheel
+   used to shrink the staves until the widest one fitted inside the signature band,
+   which made them tiny. They now hang off the rim and are free to overrun it.
+
+   Raising this makes the staves bigger *and* the coloured disc smaller, because the
+   viewBox has to grow to hold them and everything scales down together. Roughly, on
+   a 505px-wide wheel: 11 -> 4.9px line gap, disc 354px; 13 -> 5.4px, 343px;
+   18 -> 6.8px, 304px. */
+const STAFF_S   = 13;
+const STAFF_GAP = 8;    // clearance between the disc edge and the staff block
+
+/* Two separate knobs hold the staves back from shouting, and they stack:
+   `INK` in staves/convert.sh is baked into the PNGs (a cool grey, not white), and
+   this rides on top. Back either out on its own — this one is instant, the other
+   needs `bash convert.sh` re-run. */
+const STAFF_OPACITY = 0.8;
+
+/* Measured off what convert.sh actually produces, in staff-line gaps: every file
+   is 7.62 gaps tall (staff is 4 of those; the rest is the clef's reach above and
+   below), and the width starts at 5.5 for clef and margins, then grows a fixed step
+   per accidental — sharps are wider glyphs than flats.
+
+   The 2% on the width is load-bearing. `preserveAspectRatio="meet"` scales by
+   whichever of width/height is tighter; since every PNG is the same height and the
+   box height is always `STAFF_H * s`, forcing height to be the tighter one gives
+   every staff on the wheel an identical scale — which is what makes the line
+   spacing match from sector to sector. */
+const STAFF_H      = 7.62;
+const STAFF_W0     = 5.50;
+const STAFF_W_STEP = { sharp: 1.094, flat: 0.900 };
+const STAFF_SLACK  = 1.02;
+
+const staffW = (kind, n) => (STAFF_W0 + n * STAFF_W_STEP[kind]) * STAFF_SLACK;
+
+const staffSrc = (kind, n) =>
+  n === 0 ? `${STAFF_DIR}/none.png` : `${STAFF_DIR}/${kind}s-${n}.png`;
+
+/* Which staff a sector carries. A key names one or the other, never both — a
+   missing property means zero, which is C. */
+const staffPart = k => [k.sharps ? 'sharp' : 'flat', k.sharps || k.flats || 0];
+
+/* The order accidentals are added in — which is also the order they are written on
+   the staff, so the first n of these are exactly what the picture shows. */
+const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
+const FLAT_ORDER  = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
+
+/* What the staff says, in words: "E major — 4 sharps: F♯ C♯ G♯ D♯". Goes in a
+   <title>, which Chrome shows on hover and screen readers announce, so the one
+   element covers both. Worth having: the staves render around 22px tall, too small
+   to count accidentals at a glance. */
+function staffTitle(k, kind, n) {
+  if (n === 0) return `${k.major} major — no sharps or flats`;
+  const mark  = kind === 'sharp' ? '♯' : '♭';
+  const notes = (kind === 'sharp' ? SHARP_ORDER : FLAT_ORDER)
+    .slice(0, n).map(note => note + mark).join(' ');
+  return `${k.major} major — ${n} ${kind}${n > 1 ? 's' : ''}: ${notes}`;
 }
 
-// --------------------------------------------------------- staff-grid glyph
-const CELL_W = 20, CELL_H = 17;
+/* Where each staff sits, worked out up front so the viewBox can be framed around
+   them before anything is drawn.
 
-/* One key-signature graphic, centred on (x, y). */
-function staffGrid(parent, x, y, count, kind, sectorIndex) {
-  const g = el('g', { transform: `translate(${x} ${y})` }, parent);
-  const on = filledSlots(count, kind);
-  const fill = solid(sectorIndex);
+   The staves stay upright while the rim curves away under them, so the same block
+   covers a different amount of radius depending where it sits: at 12 o'clock only
+   its height points outward, at 3 o'clock its full width does. Placing every centre
+   on one circle would therefore shove the wide ones (7 sharps) far back over the
+   major ring and into its label. Instead each one is pushed out by half its own
+   reach, so all twelve *start* at the same radius and hang outward as far as they
+   individually need. The outer boundary comes out ragged; that is fine, it is on
+   black, and it is the ragged edge that lets every staff be the same size. */
+const STAVES = KEYS.map((k, i) => {
+  const [kind, n] = staffPart(k);
+  const deg = i * SECTOR, th = deg * Math.PI / 180;
+  const w = staffW(kind, n) * STAFF_S, h = STAFF_H * STAFF_S;
+  const reach = w * Math.abs(Math.sin(th)) + h * Math.abs(Math.cos(th));
+  const [cx, cy] = pt(R_OUT + STAFF_GAP + reach / 2, deg);
+  return { kind, n, w, h, x: cx - w / 2, y: cy - h / 2, title: staffTitle(k, kind, n) };
+});
 
-  const cell = (slot, label, cx0, cy0) => {
-    const lit = on.has(slot);
-    el('rect', {
-      x: cx0 - CELL_W / 2, y: cy0 - CELL_H / 2,
-      width: CELL_W, height: CELL_H,
-      fill: lit ? fill : '#ffffff',
-      stroke: lit ? fill : C_CELL,
-      'stroke-width': 1
-    }, g);
-    text(g, label, {
-      x: cx0, y: cy0 + 0.5,
-      class: 'cell-letter' + (lit ? ' on' : ''),
-      'font-size': 11
-    });
-  };
+/* How far the drawing actually reaches — the disc, or the corner of whichever staff
+   sticks out furthest. Corners matter: a block at 12 o'clock is pushed out by its
+   height but is wider than it is tall, so its corners beat its centre line. */
+const R_RIM = SHOW_STAVES
+  ? STAVES.reduce((m, s) => Math.max(m,
+      Math.hypot(Math.max(Math.abs(s.x - CX), Math.abs(s.x + s.w - CX)),
+                 Math.max(Math.abs(s.y - CY), Math.abs(s.y + s.h - CY)))), R_OUT)
+  : R_OUT;
 
-  // lines: left column, five cells
-  LINES.forEach((n, i) => cell('L' + i, n, -CELL_W / 2, (i - 2) * CELL_H));
-  // spaces: right column, four cells, offset by half a step
-  SPACES.forEach((n, i) => cell('S' + i, n, CELL_W / 2, (i - 1.5) * CELL_H));
-
-  return g;
+/* One key signature. `pointer-events: all` so the whole box is hoverable rather
+   than just the inked pixels — the target is small enough as it is. */
+function staffImage(parent, s) {
+  const img = el('image', {
+    href: staffSrc(s.kind, s.n),
+    x: s.x, y: s.y, width: s.w, height: s.h,
+    preserveAspectRatio: 'xMidYMid meet',
+    opacity: STAFF_OPACITY,
+    class: 'staff',
+    style: 'pointer-events: all'
+  }, parent);
+  el('title', {}, img).textContent = s.title;
+  return img;
 }
 
 // -------------------------------------------------------------------- mask
 /* The window, drawn over sector 0 (straight up); the whole group is rotated to
    move it. Wide part = 3 sectors, from the minor ring out; narrow part = 1
-   sector, over the diminished ring only. */
+   sector, over the diminished ring only.
+
+   It stops at the disc edge, and deliberately takes no account of the staves hanging
+   outside it — they are never dimmed, blurred or lit by the spotlight, whichever key
+   is selected. R_RIM is only used to frame the viewBox. */
 function windowPath() {
   const w = SECTOR * 1.5;   // 45° — half-width of the 3-cell part
   const n = SECTOR * 0.5;   // 15° — half-width of the 1-cell part
@@ -180,37 +314,111 @@ function windowPath() {
          ` L${gx} ${gy} A${R_DIM} ${R_DIM} 0 0 0 ${hx} ${hy} Z`;
 }
 
-function buildMask(parent) {
-  const g = el('g', { id: 'mask' }, parent);
-  const win = windowPath();
+/* Three layers, all keyed to the same window shape:
+   - a blurred, desaturated copy of the disc, clipped to everything *outside* it
+   - the scrim, which dims that same region towards the stage colour
+   - the window edge itself, a near-white hairline with a violet bloom.
+   The blurred copy is a <use> of the sharp disc underneath, so where the clip
+   cuts it away the original shows through untouched. Clipping happens after
+   filtering, which is what keeps the window edge crisp. */
+function buildSpotlight(svg, defs) {
+  const win     = windowPath();
+  const outside = `${circlePath(R_OUT)} ${circlePath(R_HUB)} ${win}`;
 
-  // scrim: the whole wheel minus the window, so everything outside fades back
+  const clip  = el('clipPath', { id: 'spot-outside', clipPathUnits: 'userSpaceOnUse' }, defs);
+  const shape = el('path', { d: outside, 'clip-rule': 'evenodd' }, clip);
+
+  const filter = el('filter', {
+    id: 'spot-veil', x: '-4%', y: '-4%', width: '108%', height: '108%',
+    'color-interpolation-filters': 'sRGB'
+  }, defs);
+  // skipped entirely at 0 rather than left as a no-op primitive, so the filter is
+  // a pure colour pass and nothing gets resampled
+  if (SPOT_BLUR > 0) el('feGaussianBlur', { stdDeviation: SPOT_BLUR }, filter);
+  el('feColorMatrix', { type: 'saturate', values: SPOT_SAT }, filter);
+
+  // Purely decorative overlays, both of them. pointer-events off so they can't
+  // swallow hover from the disc underneath — and so the veil's duplicate <title>
+  // elements, copied wholesale out of #disc, can never fire a second tooltip.
+  const veil = el('use', {
+    href: '#disc',
+    'clip-path': 'url(#spot-outside)',
+    filter: 'url(#spot-veil)',
+    style: 'pointer-events: none'
+  }, svg);
+
+  const g = el('g', { id: 'mask', style: 'pointer-events: none' }, svg);
   el('path', {
-    d: `${circlePath(R_OUT)} ${circlePath(R_HUB)} ${win}`,
-    'fill-rule': 'evenodd',
-    fill: C_SCRIM,
-    opacity: SCRIM_ALPHA
+    d: outside, 'fill-rule': 'evenodd', fill: C_STAGE, opacity: SCRIM_ALPHA
   }, g);
-
   el('path', {
     d: win, fill: 'none', stroke: C_MASK_EDGE,
-    'stroke-width': 3.5, 'stroke-linejoin': 'round'
+    'stroke-width': MASK_EDGE_W, 'stroke-linejoin': 'round', opacity: MASK_EDGE_A,
+    style: `filter: drop-shadow(0 0 ${MASK_GLOW_R}px ${C_MASK_GLOW})`
   }, g);
 
-  return g;
+  return {
+    /* The mask is placed with the SVG rotate(angle cx cy) attribute rather than a
+       CSS transform: with the viewBox offset away from the origin, transform-box/
+       transform-origin put the pivot in the wrong place. The clip shape has to
+       turn with it, so both get the same transform. */
+    setAngle(a) {
+      const t = `rotate(${a} ${CX} ${CY})`;
+      g.setAttribute('transform', t);
+      shape.setAttribute('transform', t);
+    },
+    setVisible(on) {
+      g.style.display    = on ? '' : 'none';
+      veil.style.display = on ? '' : 'none';
+    }
+  };
+}
+
+// --------------------------------------------------------------------- hub
+/* The centre reads out whichever key the window is sitting on. */
+function sigText(k) {
+  const parts = [];
+  if (k.flats)  parts.push(k.flats + '♭');
+  if (k.sharps) parts.push(k.sharps + '♯');
+  return parts.join('  /  ') || 'no ♯ or ♭';
+}
+
+function buildHub(svg) {
+  const g = el('g', { id: 'hub' }, svg);
+  el('circle', {
+    cx: CX, cy: CY, r: R_HUB,
+    fill: C_HUB, stroke: C_HUB_RIM, 'stroke-width': 2.1
+  }, g);
+  const name = text(g, '', { x: CX, y: CY - 16, class: 'hub-key' });
+  const sig  = text(g, '', { x: CX, y: CY + 30, class: 'hub-sig', 'font-size': 22, fill: C_HUB_SUB });
+
+  return i => {
+    const k = KEYS[i];
+    name.textContent = k.major;
+    name.setAttribute('font-size', twoNames(k.major) ? 30 : 58);
+    name.setAttribute('fill', textMaj(i));
+    sig.textContent = sigText(k);
+  };
 }
 
 // ------------------------------------------------------------------- render
 function draw() {
   const svg = document.getElementById('wheel');
 
-  // frame the viewBox to whatever the outermost ring currently is
-  const pad = R_OUT + 15;
+  // frame the viewBox to whatever reaches furthest — the disc, or the staves
+  // hanging off it
+  const pad = R_RIM + 12;
   svg.setAttribute('viewBox', `${CX - pad} ${CY - pad} ${pad * 2} ${pad * 2}`);
 
-  const bg      = el('g', {}, svg);
-  const strokes = el('g', {}, svg);
-  const labels  = el('g', {}, svg);
+  const defs = el('defs', {}, svg);
+
+  // everything the spotlight acts on lives in #disc, so it can be re-used blurred
+  const disc    = el('g', { id: 'disc' }, svg);
+  const bg      = el('g', {}, disc);
+  const strokes = el('g', {}, disc);
+  const labels  = el('g', {}, disc);
+
+  el('circle', { cx: CX, cy: CY, r: R_OUT, fill: C_DISC }, bg);
 
   KEYS.forEach((k, i) => {
     const mid = i * SECTOR;
@@ -218,115 +426,69 @@ function draw() {
 
     // ring backgrounds
     if (SHOW_KEY_SIGNATURES) {
-      el('path', { d: ringSector(R_MAJOR, R_OUT, a0, a1), fill: C_RING_OUTER }, bg);
+      el('path', { d: ringSector(R_MAJOR, R_OUT, a0, a1), fill: fillSig(i) }, bg);
     }
-    el('path', { d: ringSector(R_MINOR, R_MAJOR, a0, a1), fill: C_RING_MAJOR }, bg);
-    el('path', { d: ringSector(R_DIM,   R_MINOR, a0, a1), fill: C_RING_MINOR }, bg);
-    el('path', { d: ringSector(R_HUB,   R_DIM,   a0, a1), fill: C_RING_DIM   }, bg);
+    el('path', { d: ringSector(R_MINOR, R_MAJOR, a0, a1), fill: fillMaj(i) }, bg);
+    el('path', { d: ringSector(R_DIM,   R_MINOR, a0, a1), fill: fillMin(i) }, bg);
+    el('path', { d: ringSector(R_HUB,   R_DIM,   a0, a1), fill: fillDim(i) }, bg);
 
-    // divider between this sector and the next
+    // divider between this sector and the next — a seam of stage colour
     const [dx0, dy0] = pt(R_HUB, a1), [dx1, dy1] = pt(R_OUT, a1);
     el('line', {
       x1: dx0, y1: dy0, x2: dx1, y2: dy1,
-      stroke: ink(i), 'stroke-width': 1.4, opacity: 0.55
+      stroke: C_STAGE, 'stroke-width': SEAM_W
     }, strokes);
 
     // --- diminished (innermost), minor, then major names
     const [dmx, dmy] = pt(R_DIM_TEXT, mid);
     text(labels, k.dim, {
       x: dmx, y: dmy, class: 'dim-label',
-      'font-size': twoNames(k.dim) ? 15 : 21, fill: ink(i)
+      'font-size': FS_DIM(twoNames(k.dim)), fill: textDim(i)
     });
 
     const [mnx, mny] = pt(R_MINOR_TEXT, mid);
     text(labels, k.minor, {
       x: mnx, y: mny, class: 'minor-label',
-      'font-size': twoNames(k.minor) ? 21 : 27, fill: ink(i)
+      'font-size': FS_MINOR(twoNames(k.minor)), fill: textMin(i)
     });
 
     const [mjx, mjy] = pt(R_MAJOR_TEXT, mid);
     text(labels, k.major, {
       x: mjx, y: mjy, class: 'major-label',
-      'font-size': twoNames(k.major) ? 29 : 40, fill: ink(i)
+      'font-size': FS_MAJOR(twoNames(k.major)), fill: textMaj(i)
     });
 
-    // --- outer ring: key signature graphic(s) + accidental count
-    if (!SHOW_KEY_SIGNATURES) {
-      return;
-    } else if (k.dual) {
-      // flat spelling to the screen-left, sharp spelling to the screen-right
-      const s = Math.cos(mid * Math.PI / 180) > 0 ? -1 : 1;
-
-      // the two grids sit further apart when the numbers go between them
-      const spread = SHOW_COUNTS ? 10.2 : 7.4;
-
-      const [fgx, fgy] = pt(R_SIG, mid + s * spread);
-      staffGrid(labels, fgx, fgy, k.flats, 'flat', i);
-      const [sgx, sgy] = pt(R_SIG, mid - s * spread);
-      staffGrid(labels, sgx, sgy, k.sharps, 'sharp', i);
-
-      if (!SHOW_COUNTS) {
-        return;
-      } else if (k.flats === k.sharps) {
-        // both spellings need the same number of accidentals (C = 0, Gb/F# = 6),
-        // so one plain number in the middle says it — same as the reference chart
-        const [nx, ny] = pt(R_SIG, mid);
-        text(labels, String(k.flats), {
-          x: nx, y: ny, class: 'count', 'font-size': 34, fill: ink(i)
-        });
-      } else {
-        // the counts differ, so each grid is labelled with its own
-        const [fnx, fny] = pt(R_SIG, mid + s * 3.7);
-        text(labels, k.flats + '♭', {
-          x: fnx, y: fny, class: 'count', 'font-size': 27, fill: ink(i)
-        });
-        const [snx, sny] = pt(R_SIG, mid - s * 3.7);
-        text(labels, k.sharps + '♯', {
-          x: snx, y: sny, class: 'count', 'font-size': 27, fill: ink(i)
-        });
-      }
-    } else {
-      // with a number alongside it, the number sits on the side facing C and the
-      // graphic on the far side; on its own the graphic just centres in the sector
-      const kind  = k.sharps ? 'sharp' : 'flat';
-      const count = k.sharps || k.flats;
-      const off   = SHOW_COUNTS ? (i <= 5 ? -5.5 : 5.5) : 0;
-
-      if (SHOW_COUNTS) {
-        const [nx, ny] = pt(R_SIG, mid + off);
-        text(labels, String(count), {
-          x: nx, y: ny, class: 'count', 'font-size': 34, fill: ink(i)
-        });
-      }
-
-      const [gx, gy] = pt(R_SIG, mid - off);
-      staffGrid(labels, gx, gy, count, kind, i);
+    // --- the accidental count, when it is switched on. The staff itself is not
+    // drawn here: it lives outside the disc, so it is placed after this loop.
+    if (SHOW_COUNTS) {
+      const [, count] = staffPart(k);
+      const [nx, ny] = pt(R_SIG, mid);
+      text(labels, String(count), {
+        x: nx, y: ny, class: 'count', 'font-size': 30, fill: ink(i)
+      });
     }
   });
 
-  // hub + ring outlines on top of everything
-  el('circle', { cx: CX, cy: CY, r: R_HUB, fill: C_HUB }, strokes);
-  [...new Set([R_HUB, R_DIM, R_MINOR, R_MAJOR, R_OUT])].forEach(r => {
+  // ring boundaries, as seams rather than lines
+  [R_DIM, R_MINOR, R_MAJOR].forEach(r => {
     el('circle', {
-      cx: CX, cy: CY, r,
-      fill: 'none', stroke: C_LINE, 'stroke-width': 1.2, opacity: 0.55
+      cx: CX, cy: CY, r, fill: 'none', stroke: C_STAGE, 'stroke-width': SEAM_W
     }, strokes);
   });
 
-  // the mask sits on top of the lot
-  wireControls(buildMask(svg));
+  // the key signatures, hung off the rim rather than boxed into a ring. Still
+  // inside #disc, so the spotlight dims and blurs them with everything else.
+  if (SHOW_STAVES) STAVES.forEach(s => staffImage(labels, s));
+
+  // the spotlight sits on top of the disc; the hub reads out over the lot
+  wireControls(buildSpotlight(svg, defs), buildHub(svg));
 }
 
 // ---------------------------------------------------------------- controls
-/* The mask is placed with the SVG rotate(angle cx cy) attribute rather than a CSS
-   transform: with the viewBox offset away from the origin, transform-box/
-   transform-origin put the pivot in the wrong place. Hence the hand-rolled tween. */
-function wireControls(mask) {
+function wireControls(spot, showKey) {
   let selected = 0;    // index into KEYS; 0 = C at the top
   let current  = 0;    // angle actually drawn, in degrees
   let raf = null;
-
-  const setAngle = a => mask.setAttribute('transform', `rotate(${a} ${CX} ${CY})`);
 
   function glideTo(target) {
     if (raf) cancelAnimationFrame(raf);
@@ -339,9 +501,9 @@ function wireControls(mask) {
       const t = Math.min(1, (now - start) / DUR);
       const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       current = from + delta * e;
-      setAngle(current);
+      spot.setAngle(current);
       if (t < 1) raf = requestAnimationFrame(step);
-      else { current = ((target % 360) + 360) % 360; setAngle(current); raf = null; }
+      else { current = ((target % 360) + 360) % 360; spot.setAngle(current); raf = null; }
     };
     raf = requestAnimationFrame(step);
   }
@@ -349,15 +511,17 @@ function wireControls(mask) {
   document.querySelectorAll('[data-step]').forEach(btn => {
     btn.addEventListener('click', () => {
       selected = (selected + Number(btn.dataset.step) + KEYS.length) % KEYS.length;
+      showKey(selected);
       glideTo(selected * SECTOR);
     });
   });
 
   const toggle = document.getElementById('mask-toggle');
-  const show = () => { mask.style.display = toggle.checked ? '' : 'none'; };
+  const show = () => spot.setVisible(toggle.checked);
   toggle.addEventListener('change', show);
 
-  setAngle(0);
+  spot.setAngle(0);
+  showKey(0);
   show();
 }
 

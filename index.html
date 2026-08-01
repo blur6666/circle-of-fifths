@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Circle of Fifths</title>
+<!-- Resource hints, not styling — the fonts themselves are @import-ed by style.css. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -31,23 +35,6 @@
     <button class="arrow" data-step="1" aria-label="Next key">&rsaquo;</button>
   </div>
 </div>
-
-<p class="legend">
-  Rings, outside in — <strong>key signature</strong> on the treble staff (left column =
-  the five lines F D B G E, right column = the four spaces E C A F; filled boxes are the
-  notes that get a sharp or a flat), <strong>major key</strong>,
-  <strong>relative minor</strong>, <strong>diminished chord</strong> of the key.
-  <br>
-  The top sector and the three at the bottom show two spellings of the same pitch, so they
-  carry two key signatures: flat spelling on the left, sharp spelling on the right.
-  <br>
-  The <strong>mask</strong> fades everything but one key: three majors, their three
-  relative minors, the three key signatures, and the one diminished chord in the middle.
-  Use the arrows to step round the circle.
-  <br>
-  The accidental-count numbers are switched off for now —
-  set <code>SHOW_COUNTS = true</code> at the top of <code>script.js</code> to bring them back.
-</p>
 
 <script src="script.js"></script>
 </body>
