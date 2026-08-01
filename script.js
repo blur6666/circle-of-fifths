@@ -6,10 +6,11 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 /* Ring geometry in SVG user units. */
 const CX = 500, CY = 500;
 const R_HUB   = 100;    // blank centre
-const R_DIM   = 178;   // outer edge of the diminished ring
+const R_DIM   = 192;   // outer edge of the diminished ring
 const R_MINOR = 293;   // outer edge of the minor ring
 const R_MAJOR = 400;   // outer edge of the major ring
 const R_OUT   = R_MAJOR;
+const R_MASK_OUT = R_OUT - 10; // inset exposes the disc beneath the floating mask
 
 // Label positions and sizes derive from their ring widths.
 const R_DIM_TEXT   = (R_HUB   + R_DIM)   / 2;
@@ -57,27 +58,38 @@ const C_STAGE   = '#0a0b0f';   // the dark behind everything; also every seam
 const C_DISC    = '#141720';   // under the sectors, so the seams read as gaps
 const C_HUB     = '#0a0b0f';
 const C_HUB_RIM = '#3a4058';
-const C_HUB_SUB = '#aab0c4';   // on a near-black hub, the study's #6b7183 vanished
 const SEAM_W    = 2.6;
 
 const twoNames = s => s.includes('/');
 
 // -------------------------------------------------------------- spotlight
 // Spotlight tuning.
-const SCRIM_ALPHA = 0.31;
+const SCRIM_ALPHA = 0.58;    // darkness nearest the mask
+const SCRIM_DECAY = 0.62;    // fraction of the scrim ellipse where most darkness fades
+const SCRIM_FAR_ALPHA = 0.04;
+const SCRIM_X = CX;
+const SCRIM_Y = CY - 215;
+const SCRIM_RX = 310;
+const SCRIM_RY = 245;
 const SPOT_BLUR   = 0;      // feGaussianBlur, in user units
 const SPOT_SAT    = 0.90;   // saturation kept outside the window
 const C_MASK_EDGE = '#f5f6ff';
 const MASK_EDGE_A = 1;
 const MASK_EDGE_W = 5.2;    // the window's hairline, in user units
 const C_MASK_GLOW = 'rgba(160,125,255,.92)';
-const MASK_GLOW_R = 24;
+const MASK_GLOW_R = 10;
+const MASK_SHADOW_DY = 1;
+const MASK_SHADOW_R  = 3;
+const MASK_SHADOW_A  = 0.8;
+const MASK_ARMED_SHADOW_DY = 25;
+const MASK_ARMED_SHADOW_R  = 8;
+const MASK_ARMED_SHADOW_A  = 0.5;
 
 // Degrees sit in the leading outer corner of each mask cell.
 const DEGREE_LABELS = [
-  ['IV',   R_MAJOR - 30, -40, 26], ['I',   R_MAJOR - 30, -10, 26], ['V',   R_MAJOR - 30, 20, 26],
-  ['ii',   R_MINOR - 20, -40, 26], ['vi',  R_MINOR - 20, -10, 26], ['iii', R_MINOR - 20, 20, 26],
-  ['vii°', R_DIM - 13, -4, 16]
+  ['IV',   R_MAJOR - 55, -40, 26], ['I',   R_MAJOR - 57, -10, 26], ['V',   R_MAJOR - 60, 20, 26],
+  ['ii',   R_MINOR - 30, -40, 26], ['vi',  R_MINOR - 30, -10, 26], ['iii', R_MINOR - 30, 20, 26],
+  ['vii°', R_DIM   - 20, -4, 16]
 ];
 
 // ------------------------------------------------------------------ helpers
@@ -260,20 +272,21 @@ function staffImage(parent, s) {
 
 // -------------------------------------------------------------------- mask
 /* The window, drawn over sector 0 (straight up); the whole group is rotated to
-   move it. Wide part = 3 sectors, from the minor ring out; narrow part = 1
-   sector, over the diminished ring only.
+   move it. Wide part = 3 sectors, from the minor ring almost to the rim; narrow
+   part = 1 sector, over the diminished ring only.
 
-   It stops at the disc edge, and deliberately takes no account of the staves hanging
-   outside it — they are never dimmed, blurred or lit by the spotlight, whichever key
-   is selected. R_RIM is only used to frame the viewBox. */
+   It deliberately stops short of the disc edge to reveal the floor beneath the mask,
+   and takes no account of the staves hanging outside it — they are never dimmed,
+   blurred or lit by the spotlight, whichever key is selected. R_RIM only frames the
+   viewBox. */
 function windowPath() {
   const w = SECTOR * 1.5;   // 45° — half-width of the 3-cell part
   const n = SECTOR * 0.5;   // 15° — half-width of the 1-cell part
-  const [ax, ay] = pt(R_OUT, -w), [bx, by] = pt(R_OUT, w);
+  const [ax, ay] = pt(R_MASK_OUT, -w), [bx, by] = pt(R_MASK_OUT, w);
   const [cx, cy] = pt(R_DIM,  w), [dx, dy] = pt(R_DIM,  n);
   const [ex, ey] = pt(R_HUB,  n), [fx, fy] = pt(R_HUB, -n);
   const [gx, gy] = pt(R_DIM, -n), [hx, hy] = pt(R_DIM, -w);
-  return `M${ax} ${ay} A${R_OUT} ${R_OUT} 0 0 1 ${bx} ${by}` +
+  return `M${ax} ${ay} A${R_MASK_OUT} ${R_MASK_OUT} 0 0 1 ${bx} ${by}` +
          ` L${cx} ${cy} A${R_DIM} ${R_DIM} 0 0 0 ${dx} ${dy}` +
          ` L${ex} ${ey} A${R_HUB} ${R_HUB} 0 0 0 ${fx} ${fy}` +
          ` L${gx} ${gy} A${R_DIM} ${R_DIM} 0 0 0 ${hx} ${hy} Z`;
@@ -282,7 +295,7 @@ function windowPath() {
 /* Three layers, all keyed to the same window shape:
    - a blurred, desaturated copy of the disc, clipped to everything *outside* it
    - the scrim, which dims that same region towards the stage colour
-   - the window edge itself, a near-white hairline with a violet bloom.
+   - the window edge itself, a near-white hairline with a short cast shadow and violet bloom.
    The blurred copy is a <use> of the sharp disc underneath, so where the clip
    cuts it away the original shows through untouched. Clipping happens after
    filtering, which is what keeps the window edge crisp. */
@@ -302,6 +315,17 @@ function buildSpotlight(svg, defs) {
   if (SPOT_BLUR > 0) el('feGaussianBlur', { stdDeviation: SPOT_BLUR }, filter);
   el('feColorMatrix', { type: 'saturate', values: SPOT_SAT }, filter);
 
+  /* The scrim is darkest around the mask and fades towards the rest of the disc.
+     The gradient lives in the rotating mask layer, so its ellipse follows the window. */
+  const scrim = el('radialGradient', {
+    id: 'spot-scrim', gradientUnits: 'userSpaceOnUse',
+    cx: 0, cy: 0, r: 1,
+    gradientTransform: `translate(${SCRIM_X} ${SCRIM_Y}) scale(${SCRIM_RX} ${SCRIM_RY})`
+  }, defs);
+  el('stop', { offset: '0%', 'stop-color': C_STAGE, 'stop-opacity': SCRIM_ALPHA }, scrim);
+  el('stop', { offset: `${SCRIM_DECAY * 100}%`, 'stop-color': C_STAGE, 'stop-opacity': 0.12 }, scrim);
+  el('stop', { offset: '100%', 'stop-color': C_STAGE, 'stop-opacity': SCRIM_FAR_ALPHA }, scrim);
+
   // Purely decorative overlays, both of them. pointer-events off so they can't
   // swallow hover from the disc underneath — and so the veil's duplicate <title>
   // elements, copied wholesale out of #disc, can never fire a second tooltip.
@@ -314,7 +338,7 @@ function buildSpotlight(svg, defs) {
 
   const g = el('g', { id: 'mask', style: 'pointer-events: none' }, svg);
   el('path', {
-    d: outside, 'fill-rule': 'evenodd', fill: C_STAGE, opacity: SCRIM_ALPHA
+    d: outside, 'fill-rule': 'evenodd', fill: 'url(#spot-scrim)'
   }, g);
   const degreeNodes = DEGREE_LABELS.map(([label, radius, angle, size], index) => {
     const [x, y] = pt(radius, angle);
@@ -338,10 +362,14 @@ function buildSpotlight(svg, defs) {
     d: win, class: 'arm-glow', fill: 'none', stroke: C_MASK_EDGE,
     'stroke-width': MASK_EDGE_W * 2.4, 'stroke-linejoin': 'round', opacity: 0
   }, g);
-  el('path', {
+  const maskEdgeFilter = (dy, radius, alpha, glowing) =>
+    `drop-shadow(0 ${dy}px ${radius}px rgba(0, 0, 0, ${alpha}))` +
+    (glowing ? ` drop-shadow(0 0 ${MASK_GLOW_R}px ${C_MASK_GLOW})` : '');
+  const maskEdge = el('path', {
     d: win, fill: 'none', stroke: C_MASK_EDGE,
     'stroke-width': MASK_EDGE_W, 'stroke-linejoin': 'round', opacity: MASK_EDGE_A,
-    style: `filter: drop-shadow(0 0 ${MASK_GLOW_R}px ${C_MASK_GLOW})`
+    style: `filter: ${maskEdgeFilter(MASK_SHADOW_DY, MASK_SHADOW_R, MASK_SHADOW_A, false)}; ` +
+           'transition: filter 320ms linear'
   }, g);
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -366,6 +394,9 @@ function buildSpotlight(svg, defs) {
       g.style.display = display;
     },
     setArmed(armed) {
+      maskEdge.style.filter = armed
+        ? maskEdgeFilter(MASK_ARMED_SHADOW_DY, MASK_ARMED_SHADOW_R, MASK_ARMED_SHADOW_A, true)
+        : maskEdgeFilter(MASK_SHADOW_DY, MASK_SHADOW_R, MASK_SHADOW_A, false);
       if (!armed) {
         if (pulse) clearInterval(pulse);
         pulse = null;
@@ -391,28 +422,19 @@ function buildSpotlight(svg, defs) {
 
 // --------------------------------------------------------------------- hub
 /* The centre reads out whichever key the window is sitting on. */
-function sigText(k) {
-  const parts = [];
-  if (k.flats)  parts.push(k.flats + 'b');
-  if (k.sharps) parts.push(k.sharps + '#');
-  return parts.join('  /  ') || 'no # or b';
-}
-
 function buildHub(svg) {
   const g = el('g', { id: 'hub' }, svg);
   el('circle', {
     cx: CX, cy: CY, r: R_HUB,
     fill: C_HUB, stroke: C_HUB_RIM, 'stroke-width': 2.1
   }, g);
-  const name = text(g, '', { x: CX, y: CY - 16, class: 'hub-key' });
-  const sig  = text(g, '', { x: CX, y: CY + 30, class: 'hub-sig', 'font-size': 22, fill: C_HUB_SUB });
+  const name = text(g, '', { x: CX, y: CY, class: 'hub-key' });
 
   return i => {
     const k = KEYS[i];
     name.textContent = k.major;
     name.setAttribute('font-size', twoNames(k.major) ? 30 : 58);
     name.setAttribute('fill', textMaj(i));
-    sig.textContent = sigText(k);
   };
 }
 
@@ -507,20 +529,28 @@ function draw() {
     }
   };
 
-  // the spotlight sits on top of the disc; the hub reads out over the lot
+  // the spotlight sits on top of the disc; build the hub before its inner arm glow
   const spot = buildSpotlight(svg, defs);
+  const showKey = buildHub(svg);
 
-  /* The "you can turn this" cue for wheel mode — marching ants just inside the rim,
-     pulsed and crawled by CSS when body.armed-wheel is set. Outside #disc so the
-     spotlight leaves it alone and it isn't copied into the blurred veil, and after
-     it so the scrim doesn't dim the two thirds of it that fall outside the window. */
-  el('circle', {
-    id: 'arm-ring', cx: CX, cy: CY, r: R_OUT - 7,
-    fill: 'none', stroke: C_MASK_EDGE, 'stroke-width': 3,
-    'stroke-dasharray': '10 14', opacity: 0, style: 'pointer-events: none'
-  }, svg);
+  /* The "you can turn this" cue for wheel mode — matching violet glows on the outer
+     rim and hub rim, each doubled with a small black gap to separate the illuminated
+     boundaries. This makes the disc read like it turns beneath both illuminated edges.
+     Outside #disc so the spotlight leaves it alone and the scrim cannot dim either glow. */
+  [
+    ['arm-ring',       R_OUT - 2,  3],
+    ['arm-ring-outer', R_OUT + 8,  3],
+    ['arm-hub',        R_HUB + 5,  2.4],
+    ['arm-hub-inner',  R_HUB - 3,  2.4]
+  ].forEach(([id, r, width]) => {
+    el('circle', {
+      id, cx: CX, cy: CY, r,
+      fill: 'none', stroke: C_MASK_EDGE, 'stroke-width': width,
+      opacity: 0, style: 'pointer-events: none'
+    }, svg);
+  });
 
-  wireControls(spot, buildHub(svg), disc, uprights, placeStaves);
+  wireControls(spot, showKey, disc, uprights, placeStaves);
 }
 
 // ---------------------------------------------------------------- controls
@@ -532,6 +562,7 @@ function draw() {
    same. Only Reset normalises, so that "home" is one short spin away rather than
    thirteen. */
 const DUR = 380;    // ms per step
+const WHEEL_POWER_DOWN_MS = 1200;
 
 /* Overshoot and settle — the step runs past its mark by about 7% and is pulled back,
    which reads as the wheel dropping into a detent. Standard easeOutBack; c1 is how
@@ -549,6 +580,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const drawn  = { mask: 0, wheel: 0 };   // where each layer actually is
   let raf  = null;
   let mode = null;                        // null | 'mask' | 'wheel'
+  let wheelPowerDown = null;
 
   const hint  = document.getElementById('hint');
   const moveMask = document.getElementById('move-mask');
@@ -560,6 +592,24 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     mask:    'The arrows turn the mask',
     wheel:   'The arrows turn the circle'
   };
+
+  function powerDownWheelGlow() {
+    const ring = document.getElementById('arm-ring');
+    const opacity = ring ? getComputedStyle(ring).opacity : '0.95';
+    document.body.style.setProperty('--wheel-glow-start', opacity);
+    document.body.classList.add('wheel-powering-down');
+    if (wheelPowerDown) clearTimeout(wheelPowerDown);
+    wheelPowerDown = setTimeout(() => {
+      document.body.classList.remove('wheel-powering-down');
+      wheelPowerDown = null;
+    }, WHEEL_POWER_DOWN_MS);
+  }
+
+  function cancelWheelPowerDown() {
+    if (wheelPowerDown) clearTimeout(wheelPowerDown);
+    wheelPowerDown = null;
+    document.body.classList.remove('wheel-powering-down');
+  }
 
   /* The disc turns; every label on it turns back about its own anchor by the same
      amount, so it rides round the circle without going over on its head. The staves
@@ -605,6 +655,9 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
      next move should be obvious: the chosen button lights, the arrows come alive,
      and the thing that will move starts pulsing on the wheel itself. */
   function setMode(next) {
+    const leavingWheel = mode === 'wheel' && next !== 'wheel';
+    if (next === 'wheel') cancelWheelPowerDown();
+    else if (leavingWheel) powerDownWheelGlow();
     mode = next;
     if (moveMask) moveMask.checked = mode === 'mask';
     steps.forEach(b => { b.disabled = !mode; });

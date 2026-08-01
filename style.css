@@ -346,31 +346,43 @@ body.armed-mask .arm-glow {
   opacity: 0.12;
 }
 
-#arm-ring {
+#arm-ring, #arm-ring-outer, #arm-hub, #arm-hub-inner {
   opacity: 0;
-  stroke-width: 3;
+  filter: drop-shadow(0 0 8px rgba(150, 120, 255, 0.8))
+          drop-shadow(0 0 22px rgba(150, 120, 255, 0.45));
 }
-body.armed-wheel #arm-ring {
+body.armed-wheel #arm-ring,
+body.armed-wheel #arm-ring-outer,
+body.armed-wheel #arm-hub,
+body.armed-wheel #arm-hub-inner {
   opacity: 0.72;
-  animation: arm-ring-pulse 2.6s ease-in-out infinite,
-             arm-ants 2.6s linear infinite;
+  animation: arm-ring-pulse 1.4s ease-in-out infinite;
+}
+body.wheel-powering-down #arm-ring,
+body.wheel-powering-down #arm-ring-outer,
+body.wheel-powering-down #arm-hub,
+body.wheel-powering-down #arm-hub-inner {
+  animation: wheel-power-down 1.2s ease-out forwards;
 }
 @keyframes arm-ring-pulse {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 0.92; }
+  0%, 100% { opacity: 0.38; }
+  50%      { opacity: 0.95; }
 }
-@keyframes arm-ants {
-  to { stroke-dashoffset: -48; }
+@keyframes wheel-power-down {
+  from { opacity: var(--wheel-glow-start, 0.95); }
+  to   { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   body.armed-mask .arm-glow  { opacity: 0.45; }
-  body.armed-wheel #arm-ring { animation: none; opacity: 0.72; }
+  body.armed-wheel #arm-ring,
+  body.armed-wheel #arm-ring-outer,
+  body.armed-wheel #arm-hub,
+  body.armed-wheel #arm-hub-inner { animation: none; opacity: 0.72; }
 }
 
 /* SVG text */
-.major-label, .minor-label, .dim-label, .degree-label, .count,
-.hub-key, .hub-sig {
+.major-label, .minor-label, .dim-label, .degree-label, .count, .hub-key {
   font-family: var(--display);
   font-weight: 300;
 }
@@ -383,7 +395,6 @@ body.armed-wheel #arm-ring {
 }
 
 .staff { cursor: help; }
-.hub-sig { opacity: 0.92; }
 
 .hover-container {
   transform-box: fill-box;
