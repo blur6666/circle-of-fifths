@@ -25,15 +25,19 @@ body::before {
   content: '';
   position: fixed;
   z-index: 0;
-  inset: 0;
+  inset: -4%;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.46;
   background-image:
-    radial-gradient(circle at 18px 24px, rgba(214, 224, 255, 0.34) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 72px 54px, rgba(166, 190, 255, 0.2) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 126px 98px, rgba(255, 223, 194, 0.18) 0 1px, transparent 1.5px);
-  background-size: 160px 140px, 230px 190px, 290px 250px;
-  animation: star-drift 90s linear infinite;
+    radial-gradient(circle at 7% 12%, rgba(214, 224, 255, 0.32) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 18% 73%, rgba(166, 190, 255, 0.16) 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 31% 38%, rgba(255, 223, 194, 0.18) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 46% 88%, rgba(214, 224, 255, 0.24) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 58% 21%, rgba(166, 190, 255, 0.18) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 69% 61%, rgba(214, 224, 255, 0.25) 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 82% 34%, rgba(255, 223, 194, 0.14) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 93% 82%, rgba(166, 190, 255, 0.2) 0 0.8px, transparent 1.4px);
+  animation: star-drift 160s ease-in-out infinite alternate;
 }
 body > * {
   position: relative;
@@ -41,8 +45,8 @@ body > * {
 }
 
 @keyframes star-drift {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: 160px -140px, -230px -190px, 290px -250px; }
+  from { transform: translate3d(-1%, -0.6%, 0); }
+  to { transform: translate3d(1.2%, 0.8%, 0); }
 }
 
 /* Layout */
