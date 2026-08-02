@@ -91,6 +91,7 @@ h1 {
   height: auto;
   display: block;
   overflow: visible;
+  touch-action: pan-y;
 }
 
 /* Controls */
