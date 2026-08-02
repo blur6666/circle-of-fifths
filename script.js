@@ -471,7 +471,7 @@ function buildHub(svg) {
   };
 }
 
-function createKeyPlayer(getKeyIndex) {
+function createKeyPlayer(getKeyIndex, prepareKeyForPlayback) {
   const button = document.getElementById('key-player');
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
   if (!button || !AudioContextCtor) {
@@ -481,6 +481,7 @@ function createKeyPlayer(getKeyIndex) {
 
   let context = null;
   let playing = false;
+  let preparing = false;
   let finishTimer = null;
   const oscillators = new Set();
 
@@ -521,7 +522,7 @@ function createKeyPlayer(getKeyIndex) {
     root + MAJOR_SCALE[degree % MAJOR_SCALE.length] + 12 * Math.floor(degree / MAJOR_SCALE.length);
 
   button.addEventListener('click', async () => {
-    if (playing) {
+    if (playing || preparing) {
       stop();
       return;
     }
@@ -532,6 +533,12 @@ function createKeyPlayer(getKeyIndex) {
     } catch {
       return;
     }
+
+    preparing = true;
+    button.disabled = true;
+    await prepareKeyForPlayback();
+    button.disabled = false;
+    preparing = false;
 
     const root = ROOT_MIDI[getKeyIndex()];
     let start = context.currentTime + 0.05;
@@ -702,6 +709,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   let mode = null;                        // null | 'mask' | 'wheel'
   let wheelPowerDown = null;
   let drag = null;
+  let hasRotatedWheel = false;
 
   const hint  = document.getElementById('hint');
   const wheelSvg = document.getElementById('wheel');
@@ -752,15 +760,30 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const keyIndex = () =>
     ((Math.round((target.mask - target.wheel) / SECTOR) % KEYS.length) + KEYS.length)
       % KEYS.length;
-  createKeyPlayer(keyIndex);
+  createKeyPlayer(keyIndex, () => {
+    if (hasRotatedWheel) return Promise.resolve();
 
-  function glide() {
+    const randomKey = 1 + Math.floor(Math.random() * (KEYS.length - 1));
+    const destination = target.mask - randomKey * SECTOR;
+    let turn = norm(destination - target.wheel);
+    if (turn === 0) turn = SECTOR;
+    target.wheel += turn;
+    hasRotatedWheel = true;
+    showKey(keyIndex());
+
+    return new Promise(resolve => glide(resolve));
+  });
+
+  function glide(onComplete) {
     if (raf) cancelAnimationFrame(raf);
     const from = { ...drawn };
     const to   = { ...target };
     const movesMask  = from.mask  !== to.mask;
     const movesWheel = from.wheel !== to.wheel;
-    if (!movesMask && !movesWheel) return;
+    if (!movesMask && !movesWheel) {
+      onComplete?.();
+      return;
+    }
 
     const t0 = performance.now();
     const tick = now => {
@@ -771,7 +794,10 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
       if (movesMask)  spot.setAngle(drawn.mask);
       if (movesWheel) setWheel(drawn.wheel);
       if (t < 1) raf = requestAnimationFrame(tick);
-      else raf = null;
+      else {
+        raf = null;
+        onComplete?.();
+      }
     };
     raf = requestAnimationFrame(tick);
   }
@@ -797,7 +823,10 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   function step(dir) {
     if (!mode) return;
     if (mode === 'mask') target.mask  += dir * SECTOR;
-    else                 target.wheel -= dir * SECTOR;
+    else {
+      target.wheel -= dir * SECTOR;
+      hasRotatedWheel = true;
+    }
     showKey(keyIndex());
     glide();
   }
@@ -815,6 +844,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
       target.wheel -= deg;
       drawn.wheel = target.wheel;
       setWheel(drawn.wheel);
+      hasRotatedWheel = true;
     }
     showKey(keyIndex());
   }
