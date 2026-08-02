@@ -401,7 +401,8 @@ function buildSpotlight(svg, defs) {
       g.style.display = display;
     },
     setArmed(armed) {
-      maskEdge.style.filter = armed
+      const glowEnabled = armed && !document.body.classList.contains('mask-glow-off');
+      maskEdge.style.filter = glowEnabled
         ? maskEdgeFilter(MASK_ARMED_SHADOW_DY, MASK_ARMED_SHADOW_R, MASK_ARMED_SHADOW_A, true)
         : maskEdgeFilter(MASK_SHADOW_DY, MASK_SHADOW_R, MASK_SHADOW_A, false);
       if (!armed) {

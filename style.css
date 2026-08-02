@@ -382,9 +382,34 @@ body.wheel-glow-off #arm-ring,
 body.wheel-glow-off #arm-ring-outer,
 body.wheel-glow-off #arm-hub,
 body.wheel-glow-off #arm-hub-inner {
-  animation: none;
-  opacity: 0.38;
+  animation: none !important;
+  filter: none;
+  opacity: 0;
 }
+
+.key-player {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+  display: none;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  place-items: center;
+  cursor: pointer;
+  border: 1px solid #a95454;
+  border-radius: 50%;
+  background: #7b373d;
+  color: #fff0f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.38);
+}
+.key-player:hover { background: #93444a; }
+.key-player:focus-visible { outline: 2px solid #ffc2c2; outline-offset: 3px; }
+.key-player svg { width: 24px; height: 24px; fill: currentColor; }
+.key-player-stop { display: none; }
+.key-player.is-playing .key-player-play { display: none; }
+.key-player.is-playing .key-player-stop { display: block; }
 
 .chords {
   border-collapse: collapse;
