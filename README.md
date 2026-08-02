@@ -11,8 +11,7 @@ diminished chords, key signatures, diatonic chords, and modes.
 - The highlighted window shows one complete major-key chord palette. The centre
 	reads the selected major key, and the panel lists its relative minor,
 	diminished chord, signature, diatonic chords, and modes.
-- Hover a staff to read its signature. Enable the metronome and adjust its BPM
-	in the upper-right corner.
+- Hover a staff to read its signature.
 - The controls below the guide can hide the mask glow, wheel glow, or floating
 	degree-label animation.
 

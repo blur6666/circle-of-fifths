@@ -615,8 +615,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const maskGlowToggle = document.getElementById('mask-glow-toggle');
   const wheelGlowToggle = document.getElementById('wheel-glow-toggle');
   const degreeDroneToggle = document.getElementById('degree-drone-toggle');
-  const metronomeToggle = document.getElementById('metronome-toggle');
-  const metronomeBpm = document.getElementById('metronome-bpm');
   const steps = [...document.querySelectorAll('[data-step]')];
 
   const HINTS = {
@@ -781,58 +779,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     wheelGlowToggle.addEventListener('change', () => {
       document.body.classList.toggle('wheel-glow-off', wheelGlowToggle.checked);
     });
-  }
-  if (metronomeToggle && metronomeBpm) {
-    const arm = document.querySelector('.metronome-arm');
-    const bpmValue = document.getElementById('metronome-bpm-value');
-    const armAngle = 18;
-    let animationFrame = null;
-    let metronomeStartedAt = null;
-    let metronomePeriodMs = 1667;
-
-    const setArmAngle = angle => {
-      if (arm) arm.style.transform = `rotate(${angle}deg)`;
-    };
-
-    const stopMetronome = () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-      }
-      metronomeStartedAt = null;
-      document.body.classList.remove('metronome-on');
-      setArmAngle(-armAngle);
-    };
-
-    const syncMetronome = () => {
-      const bpm = Number(metronomeBpm.value) || 72;
-      const beatMs = Math.max(333, Math.round(60000 / bpm));
-      metronomePeriodMs = beatMs * 2;
-      if (bpmValue) bpmValue.textContent = String(bpm);
-
-      if (!metronomeToggle.checked) {
-        stopMetronome();
-        return;
-      }
-
-      document.body.classList.add('metronome-on');
-      metronomeStartedAt = performance.now();
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-
-      const tick = now => {
-        const elapsed = now - metronomeStartedAt;
-        const phase = (elapsed % metronomePeriodMs) / metronomePeriodMs;
-        const angle = Math.sin(phase * Math.PI * 2) * armAngle;
-        setArmAngle(angle);
-        animationFrame = requestAnimationFrame(tick);
-      };
-
-      animationFrame = requestAnimationFrame(tick);
-    };
-
-    metronomeToggle.addEventListener('change', syncMetronome);
-    metronomeBpm.addEventListener('input', syncMetronome);
-    syncMetronome();
   }
   if (degreeDroneToggle) {
     degreeDroneToggle.addEventListener('change', () => {
