@@ -71,10 +71,16 @@ Playing it will play the scale, then ther chords that are part of that key. Open
 // DONE 26. Verify how is our suppoort for mask or wheel rotation for mobile users. If not acceptable (good user experience), your output must be a list of fixes
 
 // DONE 27. For mobile users, invert the order of shown sections:
+// DONE 
+// DONE Topmost: circle of fifths, make it occupy as much width as possible.
+// DONE 
+// DONE Second: the analysis we get from the selected key
+// DONE 
+// DONE Third: "Rotation menu" card with their check boxes. The rest remaisn as is: text tex texct, and checkboxces at the end. The rationale is that mobile will need to interasct less with the rotation menu. and might be more impressed by the fancy words and reports
+// DONE 
 
-Topmost: circle of fifths, make it occupy as much width as possible.
+28. When trying to turn the wheel with the mouse on desktop, very often it start a text selection, highlighting some of the notes/chords/keys. See example at @imagem.png. Is there a way to avoid any text selection inside the wheel? 
 
-Second: the analysis we get from the selected key
+29. Responsivity implementation is suboptimal in the desktop (havent tested mobile yet). See @imagem2.png for an exaple of a 1440p monitor at 150% Windows zoom. Too much white space. Either the wheel should occupy more of the empty space, or the next component/section should occupy that space if it fits in it.
 
-Third: "Rotation menu" card with their check boxes. The rest remaisn as is: text tex texct, and checkboxces at the end. The rationale is that mobile will need to interasct less with the rotation menu. and might be more impressed by the fancy words and reports
-\
+30. [NOT READY FOR DEVELOPMENT] heel spins the wrong direction when I drag it. Seems completely random, still dont know how to reliably reproduce. I will edit here when I find a reliablee way. 
