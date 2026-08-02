@@ -28,18 +28,18 @@ const SECTOR = 30;          // degrees per key
 // Clockwise from the top. A key naming both `flats` and `sharps` carries both
 // spellings and both key signatures. `dim` is the diminished chord of the key (vii°).
 const KEYS = [
-  { major: 'C',       minor: 'a',       dim: 'B°',        sharps: 0,},
-  { major: 'G',       minor: 'e',       dim: 'F#°',       sharps: 1 },
-  { major: 'D',       minor: 'b',       dim: 'C#°',       sharps: 2 },
-  { major: 'A',       minor: 'f#',      dim: 'G#°',       sharps: 3 },
-  { major: 'E',       minor: 'c#',      dim: 'D#°',       sharps: 4 },
-  { major: 'B',       minor: 'g#',      dim: 'A#°',       sharps: 5 },
-  { major: 'Gb/F#',   minor: 'eb/d#',   dim: 'F°/E#°',    flats: 6, sharps: 6 },
-  { major: 'Db',      minor: 'bb',      dim: 'C°',        flats: 5 },
-  { major: 'Ab',      minor: 'f',       dim: 'G°',        flats: 4 },
-  { major: 'Eb',      minor: 'c',       dim: 'D°',        flats: 3 },
-  { major: 'Bb',      minor: 'g',       dim: 'A°',        flats: 2 },
-  { major: 'F',       minor: 'd',       dim: 'E°',        flats: 1 }
+  { major: 'C',       minor: 'a',       dim: 'B°',        sharps: 0, scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'] },
+  { major: 'G',       minor: 'e',       dim: 'F#°',       sharps: 1, scale: ['G', 'A', 'B', 'C', 'D', 'E', 'F#'] },
+  { major: 'D',       minor: 'b',       dim: 'C#°',       sharps: 2, scale: ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'] },
+  { major: 'A',       minor: 'f#',      dim: 'G#°',       sharps: 3, scale: ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'] },
+  { major: 'E',       minor: 'c#',      dim: 'D#°',       sharps: 4, scale: ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'] },
+  { major: 'B',       minor: 'g#',      dim: 'A#°',       sharps: 5, scale: ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'] },
+  { major: 'Gb/F#',   minor: 'eb/d#',   dim: 'F°/E#°',    flats: 6, sharps: 6, scale: ['Gb/F#', 'Ab/G#', 'Bb/A#', 'Cb/B', 'Db/C#', 'Eb/D#', 'F/E#'] },
+  { major: 'Db',      minor: 'bb',      dim: 'C°',        flats: 5, scale: ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'] },
+  { major: 'Ab',      minor: 'f',       dim: 'G°',        flats: 4, scale: ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'] },
+  { major: 'Eb',      minor: 'c',       dim: 'D°',        flats: 3, scale: ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'] },
+  { major: 'Bb',      minor: 'g',       dim: 'A°',        flats: 2, scale: ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'] },
+  { major: 'F',       minor: 'd',       dim: 'E°',        flats: 1, scale: ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'] }
 ];
 
 // ----------------------------------------------------------------- colour
@@ -452,6 +452,8 @@ function buildHub(svg) {
 
   return i => {
     const k = KEYS[i];
+    const previous = KEYS[(i + KEYS.length - 1) % KEYS.length];
+    const next = KEYS[(i + 1) % KEYS.length];
     name.textContent = k.major;
     name.setAttribute('font-size', twoNames(k.major) ? 30 : 58);
     name.setAttribute('fill', textMaj(i));
@@ -459,8 +461,57 @@ function buildHub(svg) {
     if (dashMinor) dashMinor.textContent = k.minor;
     if (dashDim) dashDim.textContent = k.dim;
     if (dashSignature) dashSignature.textContent = sigText(k);
-    if (dashChords) dashChords.textContent = 'IV · I · V / ii · vi · iii / vii°';
-    if (dashModes) dashModes.textContent = 'Ionian · Dorian · Phrygian · Lydian · Mixolydian · Aeolian · Locrian';
+    if (dashChords) dashChords.textContent =
+      `${previous.major} · ${k.major} · ${next.major} / ${previous.minor} · ${k.minor} · ${next.minor} / ${k.dim}`;
+    if (dashModes) dashModes.textContent = k.scale.map((note, degree) =>
+      `${note} ${['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'][degree]}`).join(' · ');
+  };
+}
+
+function createKeyPlayer(getKeyIndex) {
+  const button = document.getElementById('key-player');
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!button || !AudioContextCtor) {
+    if (button) button.hidden = true;
+    return;
+  }
+
+  let context = null;
+  let playing = false;
+  let finishTimer = null;
+  const oscillators = new Set();
+
+  const setPlaying = active => {
+    playing = active;
+    button.classList.toggle('is-playing', active);
+    button.setAttribute('aria-label', active ? 'Stop key playback' : 'Play selected key');
+    button.setAttribute('aria-pressed', String(active));
+  };
+
+  const stop = () => {
+    if (finishTimer) clearTimeout(finishTimer);
+    finishTimer = null;
+    oscillators.forEach(oscillator => {
+      oscillator.onended = null;
+      try { oscillator.stop(); } catch {}
+    });
+    oscillators.clear();
+    setPlaying(false);
+  };
+
+  const scheduleTone = (midi, start, duration, gainLevel) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(440 * 2 ** ((midi - 69) / 12), start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(gainLevel, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.onended = () => oscillators.delete(oscillator);
+    oscillators.add(oscillator);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.02);
   };
 }
 
@@ -658,6 +709,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const keyIndex = () =>
     ((Math.round((target.mask - target.wheel) / SECTOR) % KEYS.length) + KEYS.length)
       % KEYS.length;
+  createKeyPlayer(keyIndex);
 
   function glide() {
     if (raf) cancelAnimationFrame(raf);
