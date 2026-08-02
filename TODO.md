@@ -19,11 +19,11 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 // DONE 6. Implement a dashboard to the right of the wheel. It lists the currently selected key’s major, relative minor, diminished chord, signature, chords, and possible modes.
 
-7. [NOT priority] Nausea mode: Add very low opacity "piece of pizza"-shaped colored surfaces that spin together with the slowly spinnning dashed border we have now. They have to be BARELY visible. Some will rotate like 5% faster or -15% to see if we can actually cause nausea with it. The only way to disable it is to hover the mouse in the lower left corner of the page whnile fully scrolled down. That will reveal the checkbox "Stop the world!!!! I wanna get off" that can then be checked off.
+// CANCELLED 7. [NOT priority] Nausea mode: Add very low opacity "piece of pizza"-shaped colored surfaces that spin together with the slowly spinnning dashed border we have now. They have to be BARELY visible. Some will rotate like 5% faster or -15% to see if we can actually cause nausea with it. The only way to disable it is to hover the mouse in the lower left corner of the page whnile fully scrolled down. That will reveal the checkbox "Stop the world!!!! I wanna get off" that can then be checked off.
 
 // DONE 8. Make the Circle of Fifths as large as possible in the screen. To show its beauty toi the world, she is so pretty! 🥰 They grow so fast!
 
-9. [NOT priority] Ther is a 5% chance that the degreeNumbers will pop away from their places when you rotate (the bug that was happening before some logic on the other direction rotation fixed i)
+// CANCELLED 9. [NOT priority] Ther is a 5% chance that the degreeNumbers will pop away from their places when you rotate (the bug that was happening before some logic on the other direction rotation fixed i)
 
 // DONE 10. Create README.md, list and briefly explain all shading/lighting effects used in the project. Recommendation: dont cite line number but cite variable names (good time to see if they are descriptive enough)
 
@@ -45,21 +45,23 @@ One of the the mask on the circle of fifth's bigger value is that when it moves 
 
 // DONE 19. (after everything  priority) Review whole project. document features for humands in README.md for robots in whatever .md you kids robots put your diaries.
 
-20. Checkbox to disable all glow
-    - Checkbox to disable mask glow
-    - checkbox to disable disk glow (inner and outter)
+// DONE 20. REMOVE THE METRONOME from the UI. We will be without a click for a few days. No prob
 
-21. Metronomes: I will have to explain. Dont bother until them. Note to self:  
+// DONE 21. Add checkbox to disable all glow
+    - Add checkbox to disable mask glow
+    - Add checkbox to disable disk glow (inner and outter)
 
-22. Home screen house keeping: Adds in the home screen, options to:
-    - Hides the spin menu to the left (becomes a box with a [>])
-    - Hides metronome ([<])
-    - Hides tutorial forever: checkbox and byebye. COokie, localstorage whatever
-    - Hides Relevant info
-    - FEATURE: after hiding everything. an option: "ULTRA CIRCLE" appears -> Makes it so big that you cant even see the claves in the upper and lower ends. Button to reset
+// DONE 22. DOoes that text later on the page even makes sense? Is it fully correct?  You guys cant even understand a metronoome 😂
 
-23. DOes that text later on the page even makes sense? Is it fully correct?  You guys cant even understand a metronoome 😂jkjk
+// DONE 23. Background is an obvious repeating pattern, lets make it better. Something programatic but very low on resources, casuse it is a detail.
 
-24. Background is an obvious repeating texture, lets make it better. maybe even procedural
+// DONE 24. For mobile users: show a muted red play button pinned to the lower right corner.
+Playing it will play the scale, then ther chords that are part of that key. Open to discussion on sound synthesis and sound content.
 
-25. 
+
+// LATER Home screen house keeping: Adds in the home screen, options to:
+// LATER    - Hides the spin menu to the left (becomes a box with a [>])
+// LATER    - Hides metronome ([<])
+// LATER    - Hides tutorial forever: checkbox and byebye. COokie, localstorage whatever
+// LATER    - Hides Relevant info
+// LATER    - FEATURE: after hiding everything. an option: "ULTRA CIRCLE" appears -> Makes it so big that you cant even see the claves in the upper and lower ends. Button to reset
