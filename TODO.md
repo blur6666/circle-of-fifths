@@ -65,3 +65,16 @@ Playing it will play the scale, then ther chords that are part of that key. Open
 // LATER    - Hides tutorial forever: checkbox and byebye. COokie, localstorage whatever
 // LATER    - Hides Relevant info
 // LATER    - FEATURE: after hiding everything. an option: "ULTRA CIRCLE" appears -> Makes it so big that you cant even see the claves in the upper and lower ends. Button to reset
+
+// DONE 25. If the user press play without ever rotating the wheel at least one timne, the wheel will spin automatically for a random key and the "play" will start there.
+
+// DONE 26. Verify how is our suppoort for mask or wheel rotation for mobile users. If not acceptable (good user experience), your output must be a list of fixes
+
+// DONE 27. For mobile users, invert the order of shown sections:
+
+Topmost: circle of fifths, make it occupy as much width as possible.
+
+Second: the analysis we get from the selected key
+
+Third: "Rotation menu" card with their check boxes. The rest remaisn as is: text tex texct, and checkboxces at the end. The rationale is that mobile will need to interasct less with the rotation menu. and might be more impressed by the fancy words and reports
+\

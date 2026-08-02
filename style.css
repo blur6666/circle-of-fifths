@@ -434,6 +434,7 @@ body.wheel-glow-off #arm-hub-inner {
 .chords .fn { color: var(--ink-3); }
 
 @media (max-width: 1180px) {
+  #wheel-screen { padding-inline: 12px; }
   #wheel-screen h1 {
     position: static;
     margin-bottom: 14px;
@@ -444,7 +445,19 @@ body.wheel-glow-off #arm-hub-inner {
     gap: 14px;
   }
   .side, #wheel, .guide { grid-column: 1; }
+  #wheel {
+    grid-row: 1;
+    width: min(100%, 72vh);
+  }
+  .guide { display: contents; }
+  .dashboard {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(100%, 560px);
+    justify-self: center;
+  }
   .side {
+    grid-row: 3;
     flex-direction: row;
     align-items: center;
     justify-self: center;
@@ -455,8 +468,10 @@ body.wheel-glow-off #arm-hub-inner {
   .arrows { flex-direction: row; }
   .hint { max-width: none; display:none; }
   .reset { margin-top: 0; }
-  .guide { justify-self: center; max-width: 560px; }
-  #wheel { width: min(88vw, 62vh); }
+  .guide > :not(.dashboard) {
+    width: min(100%, 560px);
+    justify-self: center;
+  }
   .key-player { display: grid; }
 }
 
