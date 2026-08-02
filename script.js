@@ -862,6 +862,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   if (wheelSvg) {
     wheelSvg.addEventListener('pointerdown', evt => {
       if (!mode) return;
+      evt.preventDefault();
       if (raf) {
         cancelAnimationFrame(raf);
         raf = null;

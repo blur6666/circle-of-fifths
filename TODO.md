@@ -79,7 +79,7 @@ Playing it will play the scale, then ther chords that are part of that key. Open
 // DONE Third: "Rotation menu" card with their check boxes. The rest remaisn as is: text tex texct, and checkboxces at the end. The rationale is that mobile will need to interasct less with the rotation menu. and might be more impressed by the fancy words and reports
 // DONE 
 
-28. When trying to turn the wheel with the mouse on desktop, very often it start a text selection, highlighting some of the notes/chords/keys. See example at @imagem.png. Is there a way to avoid any text selection inside the wheel? 
+// DONE 28. When trying to turn the wheel with the mouse on desktop, very often it start a text selection, highlighting some of the notes/chords/keys. See example at @imagem.png. Is there a way to avoid any text selection inside the wheel?
 
 29. Responsivity implementation is suboptimal in the desktop (havent tested mobile yet). See @imagem2.png for an exaple of a 1440p monitor at 150% Windows zoom. Too much white space. Either the wheel should occupy more of the empty space, or the next component/section should occupy that space if it fits in it.
 
