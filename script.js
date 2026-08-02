@@ -42,6 +42,9 @@ const KEYS = [
   { major: 'F',       minor: 'd',       dim: 'E°',        flats: 1, scale: ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'] }
 ];
 
+const ROOT_MIDI = [60, 67, 62, 69, 64, 71, 66, 61, 68, 63, 70, 65];
+const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11];
+
 // ----------------------------------------------------------------- colour
 // SVG presentation attributes need resolved colour values rather than CSS variables.
 const hue = i => (45 + i * 30) % 360;
@@ -513,6 +516,46 @@ function createKeyPlayer(getKeyIndex) {
     oscillator.start(start);
     oscillator.stop(start + duration + 0.02);
   };
+
+  const scalePitch = (root, degree) =>
+    root + MAJOR_SCALE[degree % MAJOR_SCALE.length] + 12 * Math.floor(degree / MAJOR_SCALE.length);
+
+  button.addEventListener('click', async () => {
+    if (playing) {
+      stop();
+      return;
+    }
+
+    context ||= new AudioContextCtor();
+    try {
+      await context.resume();
+    } catch {
+      return;
+    }
+
+    const root = ROOT_MIDI[getKeyIndex()];
+    let start = context.currentTime + 0.05;
+    const scaleDuration = 0.28;
+    const chordDuration = 0.58;
+
+    for (let degree = 0; degree <= MAJOR_SCALE.length; degree += 1) {
+      scheduleTone(scalePitch(root, degree), start, scaleDuration, 0.11);
+      start += 0.34;
+    }
+    start += 0.1;
+    for (let degree = 0; degree < MAJOR_SCALE.length; degree += 1) {
+      [degree, degree + 2, degree + 4].forEach(note =>
+        scheduleTone(scalePitch(root, note), start, chordDuration, 0.045));
+      start += 0.68;
+    }
+
+    setPlaying(true);
+    finishTimer = setTimeout(() => {
+      finishTimer = null;
+      oscillators.clear();
+      setPlaying(false);
+    }, Math.ceil((start - context.currentTime) * 1000) + 80);
+  });
 }
 
 // ------------------------------------------------------------------- render

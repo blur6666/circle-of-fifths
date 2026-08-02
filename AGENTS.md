@@ -29,5 +29,6 @@ package manager, build step, or test runner.
 - Keep the base stage colour dark (`--stage`) and any background motion subtle.
 - Maintain the `prefers-reduced-motion` fallback when adding animation.
 - Verify desktop and narrow mobile layouts, no horizontal overflow, both drag
-  modes snapping to 30-degree positions, arrows, reset, mask hiding, motion
-  toggles, and metronome BPM changes.
+  modes snapping to 30-degree positions, arrows, reset, mask hiding, and motion
+  toggles. On narrow mobile, also verify key playback uses the selected key,
+  stops on a second press, and does not overlap.

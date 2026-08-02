@@ -14,6 +14,8 @@ diminished chords, key signatures, diatonic chords, and modes.
 - Hover a staff to read its signature.
 - The controls below the guide can hide the mask glow, wheel glow, or floating
 	degree-label animation.
+- On narrow screens, use the lower-right play button to hear the selected major
+	scale followed by its diatonic triads. Press it again to stop playback.
 
 ## Features
 
@@ -23,7 +25,8 @@ diminished chords, key signatures, diatonic chords, and modes.
 - A physical mask window that exposes the I, ii, iii, IV, V, vi, and vii°
 	harmonic material for the selected key.
 - Keyboard-accessible controls, pointer dragging, responsive single-column
-	layout, a reduced-motion fallback, and a subtle animated star field.
+	layout, a reduced-motion fallback, a subtle animated star field, and a
+	mobile-friendly synthesized key player.
 
 ## Visual system
 
