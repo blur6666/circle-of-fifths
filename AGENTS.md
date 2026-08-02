@@ -5,6 +5,31 @@
 This is a static browser application. Open `index.html` directly; there is no
 package manager, build step, or test runner.
 
+For agent-driven browser validation, serve the repository over HTTP instead of
+using a `file://` URL. Run the VS Code task `preview: serve`, or start the same
+server from a terminal:
+
+```powershell
+py -m http.server 4173 --bind 127.0.0.1
+```
+
+The canonical preview URL is `http://127.0.0.1:4173/`.
+
+## Browser Validation
+
+- In Codex IDE or CLI, use the project-configured `playwright` MCP server. The
+  built-in `@Browser` surface is not available in those clients.
+- After cloning or changing `.codex/config.toml`, trust the project, restart the
+  Codex extension/session, and confirm `playwright` is connected with `/mcp`.
+- In the ChatGPT desktop app, the built-in Browser plugin may be used instead:
+  invoke `@Browser` and open the canonical preview URL.
+- For every feature or bugfix that changes rendered UI or interaction, inspect
+  the page at desktop (1440 x 900) and narrow mobile (390 x 844), check the
+  browser console for new errors, and exercise the affected controls.
+- Report which viewport sizes and interactions were checked. If browser tooling
+  is unavailable, say so explicitly; do not describe source inspection as a
+  completed browser validation.
+
 ## Ownership
 
 - `index.html` defines the controls, dashboard, guide, and page structure.

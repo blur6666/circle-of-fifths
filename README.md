@@ -3,6 +3,40 @@
 An interactive circle of fifths for exploring major keys, relative minors,
 diminished chords, key signatures, diatonic chords, and modes.
 
+## Development and browser validation
+
+The app is static and has no build step. For a stable local URL, run the VS Code
+task **preview: serve** (`Terminal` > `Run Task`) or use:
+
+```powershell
+py -m http.server 4173 --bind 127.0.0.1
+```
+
+Then open `http://127.0.0.1:4173/`.
+
+For a human preview inside VS Code, run **Simple Browser: Show** from the Command
+Palette and enter that URL. Codex cannot inspect or operate that webview.
+
+Codex in the VS Code IDE extension cannot control the ChatGPT built-in Browser
+or VS Code's Simple Browser webview. This repository therefore configures the
+official Microsoft Playwright MCP server in `.codex/config.toml`, giving Codex
+an isolated headless Edge browser for DOM, interaction, console, screenshot,
+desktop, and mobile checks.
+
+After the first checkout or after changing `.codex/config.toml`:
+
+1. Mark the repository as trusted when Codex prompts.
+2. Restart the Codex extension or start a new Codex session.
+3. Run `/mcp` and confirm that `playwright` is connected.
+4. Start **preview: serve**, then ask Codex to validate the affected behavior at
+   the canonical preview URL.
+
+The first MCP startup uses `npx` to cache the pinned Playwright MCP package and
+therefore needs network access. Later sessions reuse the local npm cache.
+
+In the ChatGPT desktop app, install the Browser plugin and invoke `@Browser` to
+validate the same URL in the shared built-in browser instead.
+
 ## Using the wheel
 
 - Choose whether the arrows and pointer drag move the **wheel** or the **mask**.
