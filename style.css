@@ -457,6 +457,7 @@ body.wheel-glow-off #arm-hub-inner {
   .reset { margin-top: 0; }
   .guide { justify-self: center; max-width: 560px; }
   #wheel { width: min(88vw, 62vh); }
+  .key-player { display: grid; }
 }
 
 /* Arm animations */
