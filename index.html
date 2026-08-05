@@ -1,175 +1,174 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Circle of Fifths</title>
-<meta name="description" content="An interactive circle of fifths for exploring keys, chords, modes, and key signatures.">
-<meta property="og:title" content="The Circle of Fifths">
-<meta property="og:description" content="Explore major keys, relative minors, chords, modes, and key signatures with an interactive circle of fifths.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://blur6666.github.io/circle-of-fifths/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%230a0b0f' stroke='%23f5f6ff' stroke-width='3'/%3E%3Cpath d='M32 7v50M7 32h50M14 14l36 36M50 14L14 50' stroke='%238b93b3' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23f5b66b'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Circle of Fifths</title>
+  <meta name="description" content="An interactive circle of fifths for exploring keys, chords, modes, and key signatures.">
+  <meta property="og:title" content="The Circle of Fifths">
+  <meta property="og:description" content="Explore major keys, relative minors, chords, modes, and key signatures with an interactive circle of fifths.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://blur6666.github.io/circle-of-fifths/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%230a0b0f' stroke='%23f5f6ff' stroke-width='3'/%3E%3Cpath d='M32 7v50M7 32h50M14 14l36 36M50 14L14 50' stroke='%238b93b3' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23f5b66b'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
 
-<section class="screen" id="wheel-screen">
-  <h1>The Circle of Fifths</h1>
+  <section class="screen" id="wheel-screen">
+    <h1>The Circle of Fifths</h1>
 
-  <div class="stage">
+    <div class="stage">
 
-    <div class="side">
-      <p>Spin the Circle!</p>
-      <p class="hint" id="hint" aria-live="polite"></p>
-      <div class="arrows">
-        <button class="arrow" data-step="-1" aria-label="Previous key">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <g transform="translate(0 -8)"><polyline points="6 15 12 9 18 15"/></g>
-            <g transform="translate(0 0)"><polyline points="6 15 12 9 18 15"/></g>
-            <g transform="translate(0 8)"><polyline points="6 15 12 9 18 15"/></g>
-          </svg>
-        </button>
-        <button class="arrow" data-step="1" aria-label="Next key">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <g transform="translate(0 -8)"><polyline points="6 9 12 15 18 9"/></g>
-            <g transform="translate(0 0)"><polyline points="6 9 12 15 18 9"/></g>
-            <g transform="translate(0 8)"><polyline points="6 9 12 15 18 9"/></g>
-          </svg>
-        </button>
+      <div class="side">
+        <p>Spin the Circle!</p>
+        <p class="hint" id="hint" aria-live="polite"></p>
+        <div class="arrows">
+          <button class="arrow" data-step="-1" aria-label="Previous key">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <g transform="translate(0 -8)"><polyline points="6 15 12 9 18 15"/></g>
+              <g transform="translate(0 0)"><polyline points="6 15 12 9 18 15"/></g>
+              <g transform="translate(0 8)"><polyline points="6 15 12 9 18 15"/></g>
+            </svg>
+          </button>
+          <button class="arrow" data-step="1" aria-label="Next key">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <g transform="translate(0 -8)"><polyline points="6 9 12 15 18 9"/></g>
+              <g transform="translate(0 0)"><polyline points="6 9 12 15 18 9"/></g>
+              <g transform="translate(0 8)"><polyline points="6 9 12 15 18 9"/></g>
+            </svg>
+          </button>
+        </div>
+
+        <button class="reset" id="reset">Reset</button>
+
+        <label class="move-mask" for="move-mask">
+          <input id="move-mask" type="checkbox">
+          <span>Move mask instead</span>
+        </label>
+        <label class="hide-mask" for="hide-mask">
+          <input id="hide-mask" type="checkbox">
+          <span>Hide mask</span>
+        </label>
       </div>
 
-      <button class="reset" id="reset">Reset</button>
+      <svg id="wheel" xmlns="http://www.w3.org/2000/svg"
+          role="group" aria-label="Circle of fifths chart"></svg>
 
-      <label class="move-mask" for="move-mask">
-        <input id="move-mask" type="checkbox">
-        <span>Move mask instead</span>
-      </label>
-      <label class="hide-mask" for="hide-mask">
-        <input id="hide-mask" type="checkbox">
-        <span>Hide mask</span>
-      </label>
+      <aside class="guide">
+        <section class="dashboard" aria-live="polite">
+          <h2>Selected key</h2>
+          <dl class="dashboard-list">
+            <div><dt>Major</dt><dd id="dash-major">C</dd></div>
+            <div><dt>Relative minor</dt><dd id="dash-minor">a</dd></div>
+            <div><dt>Diminished</dt><dd id="dash-dim">B°</dd></div>
+            <div><dt>Signature</dt><dd id="dash-signature">no sharps or flats</dd></div>
+            <div><dt>Chords</dt><dd id="dash-chords">F · C · G / d · a · e / B°</dd></div>
+            <div><dt>Modes</dt><dd id="dash-modes">C Ionian · D Dorian · E Phrygian · F Lydian · G Mixolydian · A Aeolian · B Locrian</dd></div>
+          </dl>
+        </section>
+        <h2>How to read it</h2>
+        <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
+          <strong>NON REVIEWED AI GENERATED</strong>
+          <span>So take it with a <s>grain</s> mountain of salt ;)</span>
+        </div>
+        <ol class="reading-steps">
+          <li>Start at the lit <strong>major</strong> cell: it names the current key.</li>
+          <li>Read inward for its <strong>relative minor</strong> and <strong>diminished</strong> chord; read outward for the staff signature.</li>
+          <li>The window contains the seven chords of that key. Nearby slices share more notes; opposite slices share the least.</li>
+        </ol>
+        <p class="more"><a href="#about-screen">Read the full guide ↓</a></p>
+      </aside>
+
     </div>
+  </section>
 
-    <svg id="wheel" xmlns="http://www.w3.org/2000/svg"
-         role="group" aria-label="Circle of fifths chart"></svg>
+  <section class="screen prose" id="about-screen">
 
-    <aside class="guide">
-      <section class="dashboard" aria-live="polite">
-        <h2>Selected key</h2>
-        <dl class="dashboard-list">
-          <div><dt>Major</dt><dd id="dash-major">C</dd></div>
-          <div><dt>Relative minor</dt><dd id="dash-minor">a</dd></div>
-          <div><dt>Diminished</dt><dd id="dash-dim">B°</dd></div>
-          <div><dt>Signature</dt><dd id="dash-signature">no sharps or flats</dd></div>
-          <div><dt>Chords</dt><dd id="dash-chords">F · C · G / d · a · e / B°</dd></div>
-          <div><dt>Modes</dt><dd id="dash-modes">C Ionian · D Dorian · E Phrygian · F Lydian · G Mixolydian · A Aeolian · B Locrian</dd></div>
-        </dl>
-      </section>
-      <h2>How to read it</h2>
+    <div class="warning-strip" aria-label="warning strip">
       <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
         <strong>NON REVIEWED AI GENERATED</strong>
-        <span>So take it with a <s>grain</s> mountain of salt ;)</span>
+        <span>So take it with a <s>grain</s> mountain of salt </span>
       </div>
-      <ol class="reading-steps">
-        <li>Start at the lit <strong>major</strong> cell: it names the current key.</li>
-        <li>Read inward for its <strong>relative minor</strong> and <strong>diminished</strong> chord; read outward for the staff signature.</li>
-        <li>The window contains the seven chords of that key. Nearby slices share more notes; opposite slices share the least.</li>
-      </ol>
-      <p class="more"><a href="#about-screen">Read the full guide ↓</a></p>
-    </aside>
-
-  </div>
-</section>
-
-<section class="screen prose" id="about-screen">
-
-  <div class="warning-strip" aria-label="warning strip">
-    <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
-      <strong>NON REVIEWED AI GENERATED</strong>
-      <span>So take it with a <s>grain</s> mountain of salt </span>
+      <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
+        <strong>NON REVIEWED AI GENERATED</strong>
+        <span>So take it with a <s>grain</s> mountain of salt </span>
+      </div>
+      <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
+        <strong>NON REVIEWED AI GENERATED</strong>
+        <span>So take it with a <s>grain</s> mountain of salt </span>
+      </div>
     </div>
-    <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
-      <strong>NON REVIEWED AI GENERATED</strong>
-      <span>So take it with a <s>grain</s> mountain of salt </span>
-    </div>
-    <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
-      <strong>NON REVIEWED AI GENERATED</strong>
-      <span>So take it with a <s>grain</s> mountain of salt </span>
-    </div>
-  </div>
-  <h2>Working it</h2>
-  <p>Nothing turns until you say what should. <strong>Mask</strong> slides the window
-    over a wheel that stays put; <strong>Wheel</strong> turns the wheel under a window
-    that stays put, the way a cardboard one does. Once armed, the arrows come alive and
-    the thing that will move starts pulsing — the window outline breathes, or the rim
-    and hub glow. One press is one slice, either direction, for as long as you like.
-    <strong>Reset</strong> puts C back on top and keeps the current movement mode armed.</p>
-  <p>The centre always reads out the key the window is on. Hover or focus a staff to hear its
-    key and every sharp or flat in it.</p>
+    <h2>Working it</h2>
+    <p>Nothing turns until you say what should. <strong>Mask</strong> slides the window
+      over a wheel that stays put; <strong>Wheel</strong> turns the wheel under a window
+      that stays put, the way a cardboard one does. Once armed, the arrows come alive and
+      the thing that will move starts pulsing — the window outline breathes, or the rim
+      and hub glow. One press is one slice, either direction, for as long as you like.
+      <strong>Reset</strong> puts C back on top and keeps the current movement mode armed.</p>
+    <p>The centre always reads out the key the window is on.</p>
 
-  <h2>The window is a key</h2>
-  <p>Three slices wide over the major and minor rings, one slice over the diminished
-    ring — and that is not a decorative shape. It is exactly the seven chords built on
-    a major scale, and no others. With C in the middle:</p>
-  <table class="chords">
-    <tr><th>major ring</th><td>F</td><td>C</td><td>G</td><td class="fn">IV · I · V</td></tr>
-    <tr><th>minor ring</th><td>d</td><td>a</td><td>e</td><td class="fn">ii · vi · iii</td></tr>
-    <tr><th>diminished</th><td colspan="3">B°</td><td class="fn">vii°</td></tr>
-  </table>
-  <p>So the window is a chord palette. Move it one slice and every chord in it changes
-    to the next key's, which is why writing that wanders round the circle sounds like it
-    is going somewhere rather than jumping.</p>
+    <h2>The window is a key</h2>
+    <p>Three slices wide over the major and minor rings, one slice over the diminished
+      ring — and that is not a decorative shape. It is exactly the seven chords built on
+      a major scale, and no others. With C in the middle:</p>
+    <table class="chords">
+      <tr><th>major ring</th><td>F</td><td>C</td><td>G</td><td class="fn">IV · I · V</td></tr>
+      <tr><th>minor ring</th><td>d</td><td>a</td><td>e</td><td class="fn">ii · vi · iii</td></tr>
+      <tr><th>diminished</th><td colspan="3">B°</td><td class="fn">vii°</td></tr>
+    </table>
+    <p>So the window is a chord palette. Move it one slice and every chord in it changes
+      to the next key's, which is why writing that wanders round the circle sounds like it
+      is going somewhere rather than jumping.</p>
 
-  <h2>The rings</h2>
-  <p><strong>Major</strong> — the key. Clockwise is up a fifth and one more sharp;
-    anticlockwise is down a fifth and one more flat.</p>
-  <p><strong>Relative minor</strong> — the minor key sharing that signature. A minor
-    and C major are the same seven notes started in different places.</p>
-  <p><strong>Diminished</strong> — the triad on the seventh degree, a leading-tone
-    chord that commonly resolves towards the tonic.</p>
-  <p><strong>Key signature</strong> — a real engraved staff rather than a count, so you
-    read the sharps and flats where they actually sit. Every one is drawn at the same
-    size, which is why the outer edge is ragged: each hangs out as far as its own width
-    needs.</p>
+    <h2>The rings</h2>
+    <p><strong>Major</strong> — the key. Clockwise is up a fifth and one more sharp;
+      anticlockwise is down a fifth and one more flat.</p>
+    <p><strong>Relative minor</strong> — the minor key sharing that signature. A minor
+      and C major are the same seven notes started in different places.</p>
+    <p><strong>Diminished</strong> — the triad on the seventh degree, a leading-tone
+      chord that commonly resolves towards the tonic.</p>
+    <p><strong>Key signature</strong> — a real engraved staff rather than a count, so you
+      read the sharps and flats where they actually sit. Every one is drawn at the same
+      size, which is why the outer edge is ragged: each hangs out as far as its own width
+      needs.</p>
 
-  <h2>The one slice with two names</h2>
-  <p>Six sharps and six flats are the same pitches under different names, so that slice
-    carries both — <strong>Gb/F#</strong> — and its staff shows both signatures. The
-    rest of the wheel commits to one spelling each.</p>
-</section>
+    <h2>The one slice with two names</h2>
+    <p>Six sharps and six flats are the same pitches under different names, so that slice
+      carries both — <strong>Gb/F#</strong> — and its staff shows both signatures. The
+      rest of the wheel commits to one spelling each.</p>
+  </section>
 
-<button class="key-player" id="key-player" type="button" aria-label="Play selected key" aria-pressed="false">
-  <svg class="key-player-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-  <svg class="key-player-stop" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg>
-</button>
+  <button class="key-player" id="key-player" type="button" aria-label="Play selected key" aria-pressed="false">
+    <svg class="key-player-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    <svg class="key-player-stop" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg>
+  </button>
 
-<label class="glow-toggle" for="mask-glow-toggle">
-  <input id="mask-glow-toggle" type="checkbox">
-  <span>disable mask glow</span>
-</label>
-<label class="glow-toggle" for="wheel-glow-toggle">
-  <input id="wheel-glow-toggle" type="checkbox">
-  <span>disable wheel glow</span>
-</label>
-<label class="degree-drone-toggle" for="degree-drone-toggle">
-  <input id="degree-drone-toggle" type="checkbox">
-  <span>turn off degree number drones</span>
-</label>
+  <label class="glow-toggle" for="mask-glow-toggle">
+    <input id="mask-glow-toggle" type="checkbox">
+    <span>disable mask glow</span>
+  </label>
+  <label class="glow-toggle" for="wheel-glow-toggle">
+    <input id="wheel-glow-toggle" type="checkbox">
+    <span>disable wheel glow</span>
+  </label>
+  <label class="degree-drone-toggle" for="degree-drone-toggle">
+    <input id="degree-drone-toggle" type="checkbox">
+    <span>turn off degree number drones</span>
+  </label>
 
-<!-- Load order is load-bearing. config.js creates the CF namespace and every later
-     file attaches to it, so each must come after the ones it reads. main.js is
-     the entry point and is the only file that runs anything on load. -->
-<script src="js/config.js"></script>
-<script src="js/geometry.js"></script>
-<script src="js/staves.js"></script>
-<script src="js/spotlight.js"></script>
-<script src="js/audio.js"></script>
-<script src="js/scene.js"></script>
-<script src="js/controls.js"></script>
-<script src="js/main.js"></script>
-</body>
-</html>
+  <!-- Load order is load-bearing. config.js creates the CF namespace and every later
+      file attaches to it, so each must come after the ones it reads. main.js is
+      the entry point and is the only file that runs anything on load. -->
+  <script src="js/config.js"></script>
+  <script src="js/geometry.js"></script>
+  <script src="js/staves.js"></script>
+  <script src="js/spotlight.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/scene.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/main.js"></script>
+  </body>
+  </html>

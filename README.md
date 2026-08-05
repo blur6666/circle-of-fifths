@@ -2,7 +2,7 @@
 
 An interactive circle of fifths for exploring major keys, relative minors, diminished chords, key signatures, diatonic chords, and modes.
 
-**Live demo:** coming soon
+**Live demo:** Soon™
 
 ![Circle of Fifths](docs/hero.png)
 
@@ -10,7 +10,7 @@ An interactive circle of fifths for exploring major keys, relative minors, dimin
 
 Choose whether the arrows move the **wheel** or the **mask**. The arrows move one key at a time, and **Reset** returns the view to C. The window frames the selected key's seven diatonic chords: I, ii, iii, IV, V, vi, and vii°. The centre and dashboard read the major key framed by the window, along with its relative minor, diminished chord, signature, chords, and modes.
 
-Hover or focus a staff to read its key signature. The visual toggles can disable the mask glow, wheel glow, or degree-label motion. On narrow screens, the play button plays the selected major scale followed by its diatonic triads; press it again to stop.
+At the end of the screen there are options to disable the visual effects. The play button plays the selected major scale followed by its diatonic triads; press it again to stop.
 
 The enharmonic meeting point is the sector directly opposite C. Turning clockwise from C adds a sharp at each step; turning counter-clockwise adds a flat. Both directions arrive there at the same pitches after six steps, so that sector carries six sharps and six flats, with both spellings and a combined key signature.
 
