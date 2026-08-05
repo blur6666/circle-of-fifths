@@ -37,10 +37,9 @@ const staffBoxW = (kind, n, both) => both
     + (STAFF_W0 + both[1] * STAFF_W_STEP.sharp) - STAFF_CLEF
   : STAFF_W0 + n * STAFF_W_STEP[kind];
 
-/* What the staff says, in words: "E major — 4 sharps: F# C# G# D#". Goes in a
-   <title>, which Chrome shows on hover and screen readers announce, so the one
-   element covers both. Worth having: the staves render around 22px tall, too small
-   to count accidentals at a glance. */
+/* What the staff says, in words: "E major — 4 sharps: F# C# G# D#". It labels the
+   focusable SVG image and is repeated in a <title> for pointer hover. Worth having:
+   the staves render around 22px tall, too small to count accidentals at a glance. */
 const accidentals = (kind, n) =>
   (kind === 'sharp' ? SHARP_ORDER : FLAT_ORDER)
     .slice(0, n).map(note => note + (kind === 'sharp' ? '#' : 'b')).join(' ');
@@ -117,7 +116,11 @@ function staffImage(parent, s) {
     preserveAspectRatio: 'xMidYMid meet',
     opacity: STAFF_OPACITY,
     class: 'staff',
-    style: 'pointer-events: all'
+    style: 'pointer-events: all',
+    tabindex: 0,
+    focusable: 'true',
+    role: 'img',
+    'aria-label': s.title
   }, parent);
   el('title', {}, img).textContent = s.title;
   return img;

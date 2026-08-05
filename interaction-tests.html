@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circle of Fifths - interaction tests</title>
+<style>
+  body { background: #0a0b0f; color: #d8dbe8; font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace;
+         margin: 0; padding: 2rem; }
+  h1 { font-size: 1.2rem; font-weight: 600; margin: 0 0 1rem; }
+  #summary { font-size: 1.05rem; padding: .6rem .9rem; border-radius: 6px; margin: 0 0 1.2rem;
+             background: #141720; }
+  #summary.pass { color: #7ee2a8; }
+  #summary.fail { color: #ff8f8f; }
+  ol { margin: 0; padding-left: 2.4rem; }
+  li { margin: .15rem 0; }
+  li.pass::marker { color: #4d5570; }
+  li.fail { color: #ff8f8f; }
+  .tag { display: inline-block; width: 4.2rem; color: #4d5570; }
+  li.fail .tag { color: #ff8f8f; }
+  .detail { display: block; margin-left: 4.2rem; color: #ffbdbd; white-space: pre-wrap; }
+  iframe { position: fixed; left: -1600px; top: 0; width: 1440px; height: 900px; border: 0; }
+</style>
+</head>
+<body>
+
+<h1>Circle of Fifths - interaction smoke tests</h1>
+<p id="summary">running...</p>
+<ol id="results"></ol>
+<iframe id="app" src="index.html" title="Application under test"></iframe>
+
+<script>
+(function () {
+  const results = document.getElementById('results');
+  const summary = document.getElementById('summary');
+  const frame = document.getElementById('app');
+  let passed = 0, failed = 0;
+
+  function record(name, ok, detail) {
+    const li = document.createElement('li');
+    li.className = ok ? 'pass' : 'fail';
+    li.innerHTML = `<span class="tag">${ok ? 'pass' : 'FAIL'}</span><span class="name"></span>`;
+    li.querySelector('.name').textContent = name;
+    if (!ok) {
+      const d = document.createElement('span');
+      d.className = 'detail';
+      d.textContent = detail;
+      li.appendChild(d);
+    }
+    results.appendChild(li);
+    ok ? passed++ : failed++;
+  }
+
+  function eq(name, actual, expected) {
+    record(name, Object.is(actual, expected), `expected: ${expected}\nactual:   ${actual}`);
+  }
+
+  function ok(name, condition, detail) {
+    record(name, condition, detail || 'condition was false');
+  }
+
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  frame.addEventListener('load', async () => {
+    const doc = frame.contentDocument;
+    const win = frame.contentWindow;
+    const { KEYS, CX, CY } = win.CF.config;
+    const { DUR } = win.CF.geometry;
+    const previous = doc.querySelector('[data-step="-1"]');
+    const next = doc.querySelector('[data-step="1"]');
+    const reset = doc.getElementById('reset');
+    const moveMask = doc.getElementById('move-mask');
+    const hideMask = doc.getElementById('hide-mask');
+    const maskGlow = doc.getElementById('mask-glow-toggle');
+    const wheelGlow = doc.getElementById('wheel-glow-toggle');
+    const degreeDrones = doc.getElementById('degree-drone-toggle');
+    const selected = () => doc.getElementById('dash-major').textContent;
+    let frameId = 0;
+    const frames = new Map();
+    win.requestAnimationFrame = callback => {
+      const id = ++frameId;
+      frames.set(id, win.setTimeout(() => {
+        frames.delete(id);
+        callback(win.performance.now() + DUR);
+      }, 0));
+      return id;
+    };
+    win.cancelAnimationFrame = id => {
+      const timer = frames.get(id);
+      if (timer) win.clearTimeout(timer);
+      frames.delete(id);
+    };
+    const settle = () => wait(20);
+    const firstMajor = doc.querySelector('.major-label');
+    const firstMajorAnchor = firstMajor.getAttribute('transform').slice('rotate(0'.length);
+
+    eq('starts on C', selected(), KEYS[0].major);
+
+    previous.click();
+    eq('wheel previous selects F', selected(), KEYS[KEYS.length - 1].major);
+    next.click();
+    eq('wheel next returns to C', selected(), KEYS[0].major);
+    await settle();
+
+    next.click();
+    eq('wheel next selects G', selected(), KEYS[1].major);
+    await settle();
+    eq('wheel rotates one sector', doc.getElementById('disc').getAttribute('transform'),
+      `rotate(${-win.CF.config.SECTOR} ${CX} ${CY})`);
+    ok('wheel labels counter-rotate',
+      firstMajor.getAttribute('transform').startsWith(`rotate(${win.CF.config.SECTOR} `),
+      'the first major label did not rotate opposite to the disc');
+
+    for (let i = 2; i < KEYS.length; i += 1) {
+      next.click();
+      eq(`wheel next selects ${KEYS[i].major}`, selected(), KEYS[i].major);
+    }
+    next.click();
+    eq('wheel wraps to C after twelve steps', selected(), KEYS[0].major);
+    await settle();
+    eq('wheel labels remain counter-rotated after a full turn',
+      firstMajor.getAttribute('transform'), `rotate(360${firstMajorAnchor}`);
+
+    moveMask.checked = true;
+    moveMask.dispatchEvent(new Event('change', { bubbles: true }));
+    next.click();
+    eq('mask next selects G', selected(), KEYS[1].major);
+    await settle();
+    eq('mask rotates while wheel stays put', doc.getElementById('mask').getAttribute('transform'),
+      `rotate(${win.CF.config.SECTOR} ${CX} ${CY})`);
+    eq('mask mode keeps the wheel at its settled angle', doc.getElementById('disc').getAttribute('transform'),
+      `rotate(${-360} ${CX} ${CY})`);
+
+    hideMask.checked = true;
+    hideMask.dispatchEvent(new Event('change', { bubbles: true }));
+    eq('hide-mask hides the window', doc.getElementById('mask').style.display, 'none');
+    hideMask.checked = false;
+    hideMask.dispatchEvent(new Event('change', { bubbles: true }));
+
+    [
+      [maskGlow, 'mask-glow-off', 'mask glow toggle'],
+      [wheelGlow, 'wheel-glow-off', 'wheel glow toggle'],
+      [degreeDrones, 'degree-drones-off', 'degree drone toggle']
+    ].forEach(([toggle, className, name]) => {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+      ok(`${name} applies its visual state`, doc.body.classList.contains(className));
+      toggle.checked = false;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    reset.click();
+    eq('Reset restores C', selected(), KEYS[0].major);
+    ok('Reset preserves mask mode', doc.body.classList.contains('armed-mask'), 'mask mode was not armed after Reset');
+
+    const beforePlayback = selected();
+    doc.getElementById('key-player').click();
+    eq('playback does not change the selected key', selected(), beforePlayback);
+
+    const staves = [...doc.querySelectorAll('.staff')];
+    eq('all staff descriptions are focusable', staves.filter(s => s.getAttribute('tabindex') === '0').length, KEYS.length);
+    eq('all staff descriptions have explicit labels', staves.filter(s => s.hasAttribute('aria-label')).length, KEYS.length);
+    eq('dragging remains disabled', win.CF.config.dragEnabled, false);
+
+    summary.className = failed ? 'fail' : 'pass';
+    summary.textContent = failed
+      ? `${failed} failed, ${passed} passed, ${passed + failed} total`
+      : `all ${passed} assertions passed`;
+    summary.dataset.passed = passed;
+    summary.dataset.failed = failed;
+    document.title = `${failed ? failed + ' FAILED' : 'PASS'} - Circle of Fifths interaction tests`;
+  });
+})();
+</script>
+
+</body>
+</html>

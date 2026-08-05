@@ -10,7 +10,7 @@ An interactive circle of fifths for exploring major keys, relative minors, dimin
 
 Choose whether the arrows move the **wheel** or the **mask**. The arrows move one key at a time, and **Reset** returns the view to C. The window frames the selected key's seven diatonic chords: I, ii, iii, IV, V, vi, and vii°. The centre and dashboard read the major key framed by the window, along with its relative minor, diminished chord, signature, chords, and modes.
 
-Hover a staff to read its key signature. The visual toggles can disable the mask glow, wheel glow, or degree-label motion. On narrow screens, the play button plays the selected major scale followed by its diatonic triads; press it again to stop.
+Hover or focus a staff to read its key signature. The visual toggles can disable the mask glow, wheel glow, or degree-label motion. On narrow screens, the play button plays the selected major scale followed by its diatonic triads; press it again to stop.
 
 The enharmonic meeting point is the sector directly opposite C. Turning clockwise from C adds a sharp at each step; turning counter-clockwise adds a flat. Both directions arrive there at the same pitches after six steps, so that sector carries six sharps and six flats, with both spellings and a combined key signature.
 
@@ -26,7 +26,9 @@ Then open `http://127.0.0.1:4173/`. The VS Code task **preview: serve** runs the
 
 ## Testing
 
-Open `http://127.0.0.1:4173/tests.html` after starting the local server. The standalone test page runs the pure-layer assertions for the key table, angle math, staff layout, and geometry. It deliberately loads only `config.js`, `geometry.js`, and `staves.js`; scene rendering and interaction are outside its scope.
+Open `http://127.0.0.1:4173/tests.html` after starting the local server. The standalone test page runs the pure-layer assertions for the key table, angle math, staff layout, and geometry. It deliberately loads only `config.js`, `geometry.js`, and `staves.js`.
+
+Open `http://127.0.0.1:4173/interaction-tests.html` for the browser smoke tests covering wheel and mask movement, Reset, mask visibility, selected-key playback, counter-rotation, and staff accessibility attributes.
 
 ## Known limitations
 

@@ -4,7 +4,7 @@ CF.audio = (function () {
 
 const { ROOT_MIDI, MAJOR_SCALE } = CF.config;
 
-function createKeyPlayer(getKeyIndex, prepareKeyForPlayback) {
+function createKeyPlayer(getKeyIndex) {
   const button = document.getElementById('key-player');
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
   if (!button || !AudioContextCtor) {
@@ -55,23 +55,27 @@ function createKeyPlayer(getKeyIndex, prepareKeyForPlayback) {
     root + MAJOR_SCALE[degree % MAJOR_SCALE.length] + 12 * Math.floor(degree / MAJOR_SCALE.length);
 
   button.addEventListener('click', async () => {
-    if (playing || preparing) {
+    if (playing) {
       stop();
       return;
     }
+    if (preparing) return;
 
+    preparing = true;
+    button.disabled = true;
     context ||= new AudioContextCtor();
     try {
       await context.resume();
     } catch {
       return;
+    } finally {
+      button.disabled = false;
+      preparing = false;
     }
 
-    preparing = true;
-    button.disabled = true;
-    await prepareKeyForPlayback();
-    button.disabled = false;
-    preparing = false;
+    if (playing) {
+      return;
+    }
 
     const root = ROOT_MIDI[getKeyIndex()];
     let start = context.currentTime + 0.05;

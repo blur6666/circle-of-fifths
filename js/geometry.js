@@ -61,7 +61,7 @@ const ease = t => {
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 };
 
-// nearest equivalent angle in (-180, 180], so Reset takes the short way home
+// nearest equivalent angle in [-180, 180), so Reset takes the short way home
 const norm = a => ((a % 360) + 540) % 360 - 180;
 
 return {

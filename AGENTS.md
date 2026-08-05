@@ -48,7 +48,7 @@ All script tags are plain tags, not ES modules. Their order is load-bearing.
 - Verify desktop at `1440x900` and narrow mobile at `390x844`.
 - Check for horizontal overflow, console errors, and missing assets.
 - Exercise both arrows, Reset, mask/wheel mode, mask hiding, all visual toggles, and the disabled-drag behavior.
-- Confirm staves remain legible and their hover titles work, including `Gb/F#`.
+- Confirm staves remain legible and their hover titles and keyboard focus labels work, including `Gb/F#`.
 - On narrow mobile, verify key playback uses the selected key, stops on a second press, and does not overlap.
 
 Report which viewport sizes and interactions were actually checked. If browser tooling is unavailable, say so explicitly. Never describe source inspection as completed browser validation.

@@ -20,7 +20,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   let mode = null;                        // null | 'mask' | 'wheel'
   let wheelPowerDown = null;
   let drag = null;
-  let hasRotatedWheel = false;
 
   const hint  = document.getElementById('hint');
   const wheelSvg = document.getElementById('wheel');
@@ -71,28 +70,15 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const keyIndex = () =>
     ((Math.round((target.mask - target.wheel) / SECTOR) % KEYS.length) + KEYS.length)
       % KEYS.length;
-  createKeyPlayer(keyIndex, () => {
-    if (hasRotatedWheel) return Promise.resolve();
+  createKeyPlayer(keyIndex);
 
-    const randomKey = 1 + Math.floor(Math.random() * (KEYS.length - 1));
-    const destination = target.mask - randomKey * SECTOR;
-    let turn = norm(destination - target.wheel);
-    if (turn === 0) turn = SECTOR;
-    target.wheel += turn;
-    hasRotatedWheel = true;
-    showKey(keyIndex());
-
-    return new Promise(resolve => glide(resolve));
-  });
-
-  function glide(onComplete) {
+  function glide() {
     if (raf) cancelAnimationFrame(raf);
     const from = { ...drawn };
     const to   = { ...target };
     const movesMask  = from.mask  !== to.mask;
     const movesWheel = from.wheel !== to.wheel;
     if (!movesMask && !movesWheel) {
-      onComplete?.();
       return;
     }
 
@@ -107,7 +93,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
       if (t < 1) raf = requestAnimationFrame(tick);
       else {
         raf = null;
-        onComplete?.();
       }
     };
     raf = requestAnimationFrame(tick);
@@ -136,7 +121,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     if (mode === 'mask') target.mask  += dir * SECTOR;
     else {
       target.wheel -= dir * SECTOR;
-      hasRotatedWheel = true;
     }
     showKey(keyIndex());
     glide();
@@ -155,7 +139,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
       target.wheel -= deg;
       drawn.wheel = target.wheel;
       setWheel(drawn.wheel);
-      hasRotatedWheel = true;
     }
     showKey(keyIndex());
   }

@@ -148,7 +148,7 @@ value from the current implementation, do not invent one from theory**:
 
 **Angle math**
 - `norm(0)`, `norm(190)`, `norm(-190)`, `norm(180)`, `norm(360)`, `norm(540)` —
-  confirm the documented contract that the result lands in (-180, 180].
+  confirm the documented contract that the result lands in [-180, 180).
 - `ease(0)` and `ease(1)` hit their endpoints exactly.
 - `ease` overshoots above 1 somewhere in the middle — assert that a sampled
   midpoint exceeds 1, since the overshoot is the documented intent.
@@ -285,9 +285,8 @@ again the moment the flag flips back.
    armed states still show.
 7. Dragging does nothing, and clicking on the wheel does not interfere with any
    other control.
-8. The mobile key-player button still plays the selected key's scale and
-   diatonic triads, still stops on a second press, and still auto-spins to a
-   random key if the wheel has never been moved.
+8. The mobile key-player button plays the selected key's scale and diatonic
+    triads, and stops on a second press without changing the selected key.
 9. Console clean at desktop and narrow mobile.
 
 **Report what was checked. Then stop and wait.**

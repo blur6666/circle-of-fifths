@@ -451,7 +451,7 @@ body.wheel-glow-off #arm-hub-inner {
   .side, #wheel, .guide { grid-column: 1; }
   #wheel {
     grid-row: 1;
-    width: min(100%, 72vh);
+    width: min(calc(100vw - 24px), 72vh);
   }
   .guide { display: contents; }
   .dashboard {
@@ -547,6 +547,7 @@ body.wheel-powering-down #arm-hub-inner {
   transform-origin: center;
   animation: staff-drift 4.2s ease-in-out infinite;
 }
+.staff:focus { outline: 2px solid #ffc2c2; outline-offset: 3px; }
 
 @keyframes staff-drift {
   0%, 100% { transform: translateY(0) scale(1); }
@@ -598,4 +599,8 @@ body.degree-drones-off .shadow {
     transform: scale(0.7);
     opacity: 0.2;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staff, .drone, .shadow { animation: none; }
 }
