@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circle of Fifths — tests</title>
+<style>
+  body { background: #0a0b0f; color: #d8dbe8; font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace;
+         margin: 0; padding: 2rem; }
+  h1 { font-size: 1.2rem; font-weight: 600; margin: 0 0 1rem; }
+  #summary { font-size: 1.05rem; padding: .6rem .9rem; border-radius: 6px; margin: 0 0 1.2rem;
+             background: #141720; }
+  #summary.pass { color: #7ee2a8; }
+  #summary.fail { color: #ff8f8f; }
+  ol { margin: 0; padding-left: 2.4rem; }
+  li { margin: .15rem 0; }
+  li.pass::marker { color: #4d5570; }
+  li.fail { color: #ff8f8f; }
+  li.pass .name { color: #d8dbe8; }
+  .tag { display: inline-block; width: 4.2rem; color: #4d5570; }
+  li.fail .tag { color: #ff8f8f; }
+  .detail { display: block; margin-left: 4.2rem; color: #ffbdbd; white-space: pre-wrap; }
+  h2 { font-size: .95rem; font-weight: 600; color: #8b93b3; margin: 1.4rem 0 .3rem; }
+</style>
+</head>
+<body>
+
+<h1>Circle of Fifths — pure layer tests</h1>
+<p id="summary">running…</p>
+<ol id="results"></ol>
+
+<!-- The pure layer only: config, geometry, staves. Nothing here touches the scene
+     or the interaction state, which is exactly what makes this page loadable
+     without index.html. Order is load-bearing; config.js creates CF. -->
+<script src="js/config.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/staves.js"></script>
+
+<script>
+(function () {
+  const { KEYS, ROOT_MIDI, STAFF_W0, STAFF_W_STEP, STAFF_CLEF } = CF.config;
+  const { pt, norm, ease, ringSector, circlePath } = CF.geometry;
+  const { isDual, staffPart, staffBoxW, staffSrc, accidentals, spelt } = CF.staves;
+
+  const results = document.getElementById('results');
+  let passed = 0, failed = 0;
+  let group = '';
+
+  function section(title) { group = title; }
+
+  function record(name, ok, detail) {
+    const li = document.createElement('li');
+    li.className = ok ? 'pass' : 'fail';
+    li.innerHTML = `<span class="tag">${ok ? 'pass' : 'FAIL'}</span><span class="name"></span>`;
+    li.querySelector('.name').textContent = (group ? group + ' — ' : '') + name;
+    if (!ok) {
+      const d = document.createElement('span');
+      d.className = 'detail';
+      d.textContent = detail;
+      li.appendChild(d);
+    }
+    results.appendChild(li);
+    ok ? passed++ : failed++;
+  }
+
+  const show = v => typeof v === 'string' ? JSON.stringify(v) : JSON.stringify(v);
+
+  // strict equality, for values the implementation produces exactly
+  function eq(name, actual, expected) {
+    record(name, Object.is(actual, expected),
+      `expected: ${show(expected)}\nactual:   ${show(actual)}`);
+  }
+
+  function deepEq(name, actual, expected) {
+    record(name, JSON.stringify(actual) === JSON.stringify(expected),
+      `expected: ${show(expected)}\nactual:   ${show(actual)}`);
+  }
+
+  // for values that come out of floating-point arithmetic
+  function near(name, actual, expected, eps) {
+    record(name, Math.abs(actual - expected) <= eps,
+      `expected: ${show(expected)} ±${eps}\nactual:   ${show(actual)}`);
+  }
+
+  function ok(name, condition, detail) {
+    record(name, !!condition, detail || 'condition was false');
+  }
+
+  // -------------------------------------------------------------- KEYS table
+  section('KEYS');
+
+  eq('has exactly 12 entries', KEYS.length, 12);
+
+  const badScale = KEYS.filter(k => !Array.isArray(k.scale) || k.scale.length !== 7);
+  ok('every entry has a 7-note scale', badScale.length === 0,
+     `not 7 notes: ${badScale.map(k => k.major).join(', ')}`);
+
+  eq('ROOT_MIDI has one root per key', ROOT_MIDI.length, KEYS.length);
+
+  // consecutive roots are a perfect fifth apart, and the twelfth wraps back to the first
+  const badFifth = ROOT_MIDI
+    .map((v, i) => [i, (((ROOT_MIDI[(i + 1) % ROOT_MIDI.length] - v) % 12) + 12) % 12])
+    .filter(([, gap]) => gap !== 7);
+  ok('successive roots are a fifth apart (mod 12)', badFifth.length === 0,
+     `steps that are not 7 semitones: ${JSON.stringify(badFifth)}`);
+
+  /* Every non-dual key's diminished chord is its seventh scale degree plus °.
+     Gb/F# is deliberately exempt: it carries F°/E#° against a seventh degree of
+     F/E#. That is the enharmonic meeting point, not a data error — do not
+     "fix" either the data or this exclusion. */
+  const dimMismatch = KEYS
+    .filter(k => !isDual(k))
+    .filter(k => k.dim !== k.scale[6] + '°');
+  ok('non-dual dim is the seventh degree + °', dimMismatch.length === 0,
+     `mismatched: ${dimMismatch.map(k => `${k.major}: ${k.dim} vs ${k.scale[6]}°`).join(', ')}`);
+
+  const duals = KEYS.filter(isDual);
+  eq('exactly one key is dual', duals.length, 1);
+  eq('the dual key is Gb/F#', duals[0] && duals[0].major, 'Gb/F#');
+
+  // -------------------------------------------------------------- angle math
+  section('norm');
+
+  /* The comment on norm() says the result lands in (-180, 180]. It does not:
+     norm(180) is -180, so the real range is [-180, 180). These assertions pin
+     what the implementation does, not what the comment claims. Behaviourally it
+     makes no difference — a half turn is the same distance either way round —
+     but the two disagree and the code is what ships. */
+  eq('norm(0)', norm(0), 0);
+  eq('norm(190)', norm(190), -170);
+  eq('norm(-190)', norm(-190), 170);
+  eq('norm(180)', norm(180), -180);       // NOT 180 — the range is half-open at the top
+  eq('norm(360)', norm(360), 0);
+  eq('norm(540)', norm(540), -180);
+
+  let outOfRange = null;
+  for (let a = -1000; a <= 1000 && !outOfRange; a += 0.5) {
+    const v = norm(a);
+    if (!(v >= -180 && v < 180)) outOfRange = [a, v];
+  }
+  ok('norm always lands in [-180, 180)', !outOfRange,
+     `norm(${outOfRange && outOfRange[0]}) = ${outOfRange && outOfRange[1]}`);
+
+  section('ease');
+
+  eq('ease(1) is exactly 1', ease(1), 1);
+  /* ease(0) is -2.22e-16 rather than 0: 1 - 2.45 + 1.45 does not cancel in
+     doubles. glide() never divides by it and the first frame is invisible, so
+     it is pinned as near-zero rather than exact. */
+  near('ease(0) is zero to within rounding', ease(0), 0, 1e-12);
+  ok('ease overshoots 1 in the middle', ease(0.5) > 1,
+     `ease(0.5) = ${ease(0.5)}, expected > 1`);
+
+  // -------------------------------------------------------------- staff math
+  section('accidentals');
+
+  eq("accidentals('sharp', 4)", accidentals('sharp', 4), 'F# C# G# D#');
+  eq("accidentals('flat', 2)", accidentals('flat', 2), 'Bb Eb');
+  ok('accidentals(kind, 0) is empty for both kinds',
+     accidentals('sharp', 0) === '' && accidentals('flat', 0) === '',
+     `sharp: ${show(accidentals('sharp', 0))}, flat: ${show(accidentals('flat', 0))}`);
+
+  section('spelt');
+
+  eq("spelt('sharp', 1) is singular", spelt('sharp', 1), '1 sharp: F#');
+  eq("spelt('flat', 2) is plural", spelt('flat', 2), '2 flats: Bb Eb');
+
+  section('staffBoxW');
+
+  ok('n = 0 is STAFF_W0 for either kind',
+     staffBoxW('sharp', 0, null) === STAFF_W0 && staffBoxW('flat', 0, null) === STAFF_W0,
+     `sharp: ${staffBoxW('sharp', 0, null)}, flat: ${staffBoxW('flat', 0, null)}, STAFF_W0: ${STAFF_W0}`);
+
+  eq('the hybrid is flat half + sharp half − one clef',
+     staffBoxW('flat', 6, [6, 6]),
+     (STAFF_W0 + 6 * STAFF_W_STEP.flat) + (STAFF_W0 + 6 * STAFF_W_STEP.sharp) - STAFF_CLEF);
+
+  section('staffSrc');
+
+  eq('zero accidentals', staffSrc('sharp', 0, null), 'staves/none.png');
+  eq('the dual key', staffSrc('flat', 6, [6, 6]), 'staves/hybrid-6-6.png');
+  eq('sharps', staffSrc('sharp', 3, null), 'staves/sharps-3.png');
+  eq('flats', staffSrc('flat', 2, null), 'staves/flats-2.png');
+
+  section('staffPart');
+
+  deepEq('the dual key takes the flat half plus a both pair',
+     staffPart(KEYS.find(isDual)), ['flat', 6, [6, 6]]);
+
+  const strayBoth = KEYS.filter(k => !isDual(k)).filter(k => staffPart(k)[2] !== null);
+  ok('every other key has a null both', strayBoth.length === 0,
+     `non-null both: ${strayBoth.map(k => k.major).join(', ')}`);
+
+  // ---------------------------------------------------------------- geometry
+  section('pt');
+
+  /* 0° is 12 o'clock and angles increase clockwise: pt() subtracts 90° before
+     converting, and SVG y grows downward. */
+  const EPS = 1e-9;
+  ok('0° is straight up, 180° straight down',
+     Math.abs(pt(100, 0)[0] - 500) < EPS && Math.abs(pt(100, 0)[1] - 400) < EPS &&
+     Math.abs(pt(100, 180)[0] - 500) < EPS && Math.abs(pt(100, 180)[1] - 600) < EPS,
+     `pt(100,0) = ${show(pt(100, 0))} expected [500,400]; ` +
+     `pt(100,180) = ${show(pt(100, 180))} expected [500,600]`);
+
+  ok('90° is 3 o\'clock, 270° is 9 o\'clock',
+     Math.abs(pt(100, 90)[0] - 600) < EPS && Math.abs(pt(100, 90)[1] - 500) < EPS &&
+     Math.abs(pt(100, 270)[0] - 400) < EPS && Math.abs(pt(100, 270)[1] - 500) < EPS,
+     `pt(100,90) = ${show(pt(100, 90))} expected [600,500]; ` +
+     `pt(100,270) = ${show(pt(100, 270))} expected [400,500]`);
+
+  section('paths');
+
+  const sector = ringSector(100, 200, 0, 30);
+  ok('ringSector returns a path starting with a move',
+     typeof sector === 'string' && sector.length > 0 && sector[0] === 'M',
+     `got: ${show(sector)}`);
+
+  const circle = circlePath(100);
+  ok('circlePath returns a path starting with a move',
+     typeof circle === 'string' && circle.length > 0 && circle[0] === 'M',
+     `got: ${show(circle)}`);
+
+  // ----------------------------------------------------------------- tally
+  const summary = document.getElementById('summary');
+  summary.className = failed ? 'fail' : 'pass';
+  summary.textContent = failed
+    ? `${failed} failed, ${passed} passed, ${passed + failed} total`
+    : `all ${passed} assertions passed`;
+  summary.dataset.passed = passed;
+  summary.dataset.failed = failed;
+  document.title = `${failed ? failed + ' FAILED' : 'PASS'} — Circle of Fifths tests`;
+})();
+</script>
+
+</body>
+</html>
