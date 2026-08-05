@@ -164,15 +164,12 @@ function draw() {
   const spot = buildSpotlight(svg, defs);
   const showKey = buildHub(svg);
 
-  /* The "you can turn this" cue for wheel mode - matching violet glows on the outer
-     rim and hub rim, each doubled with a small black gap to separate the illuminated
-     boundaries. This makes the disc read like it turns beneath both illuminated edges.
-     Outside #disc so the spotlight leaves it alone and the scrim cannot dim either glow. */
+  /* The "you can turn this" cue for wheel mode: one violet line at each boundary of
+     the playable cells. Outside #disc so the spotlight leaves it alone and the scrim
+     cannot dim it. */
   [
-    ['arm-ring',       R_OUT - 2,  3],
-    ['arm-ring-outer', R_OUT + 8,  3],
-    ['arm-hub',        R_HUB + 5,  2.4],
-    ['arm-hub-inner',  R_HUB - 3,  2.4]
+    ['arm-ring', R_OUT - 2, 3],
+    ['arm-hub',  R_HUB + 5, 2.4]
   ].forEach(([id, r, width]) => {
     el('circle', {
       id, cx: CX, cy: CY, r,

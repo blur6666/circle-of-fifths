@@ -133,7 +133,8 @@ h1 {
   justify-items: center;
   gap: 4px;
 }
-.arrow-control > span {
+.arrow-control > span,
+.mask-label {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -141,12 +142,17 @@ h1 {
 }
 .wheel-control { --control: #75d1ff; --control-border: #307aa3; --control-bg: #102734; }
 .mask-control { --control: #d3a4ff; --control-border: #7952a2; --control-bg: #251936; }
-.arrow-control > span { color: var(--control); }
-.mask-actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.arrow-control > span,
+.mask-label { color: var(--control); }
+.mask-label {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
+.mask-label:hover { filter: brightness(1.25); }
+.mask-label:focus-visible { outline: 2px solid var(--control); outline-offset: 2px; }
+.mask-label.is-hidden { color: var(--ink-3); }
 .arrows {
   display: flex;
   flex-direction: column;
@@ -212,38 +218,6 @@ body.armed-mask .mask-control .arrow {
   background: oklch(0.37 0.10 15);
   color: oklch(0.95 0.12 15);
 }
-
-.mask-visibility {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 25px;
-  height: 25px;
-}
-.mask-visibility {
-  cursor: pointer;
-  color: var(--control);
-  font: inherit;
-  padding: 0;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--control-border) 70%, transparent);
-  border-radius: 5px;
-}
-.mask-visibility:hover { background: color-mix(in srgb, var(--control-bg) 75%, transparent); }
-.mask-visibility:focus-visible { outline: 2px solid var(--control); outline-offset: 2px; }
-.mask-visibility svg {
-  width: 13px;
-  height: 13px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.mask-hidden-icon { display: none; }
-.mask-visibility.is-hidden .mask-visible-icon { display: none; }
-.mask-visibility.is-hidden .mask-hidden-icon { display: block; }
-.mask-visibility.is-hidden { color: var(--ink-2); }
 
 .hint {
   display: none;
@@ -427,9 +401,7 @@ body.mask-glow-off .arm-glow {
   opacity: 0;
 }
 body.wheel-glow-off #arm-ring,
-body.wheel-glow-off #arm-ring-outer,
-body.wheel-glow-off #arm-hub,
-body.wheel-glow-off #arm-hub-inner {
+body.wheel-glow-off #arm-hub {
   animation: none !important;
   filter: none;
   opacity: 0;
@@ -518,7 +490,6 @@ body.wheel-glow-off #arm-hub-inner {
     gap: 14px;
   }
   .arrows { flex-direction: row; }
-  .mask-actions { gap: 5px; }
   .motion-controls { gap: 22px; }
   .hint { max-width: none; display:none; }
   .reset { margin-top: 0; }
@@ -542,22 +513,18 @@ body.armed-mask .arm-glow {
   opacity: 0.12;
 }
 
-#arm-ring, #arm-ring-outer, #arm-hub, #arm-hub-inner {
+#arm-ring, #arm-hub {
   opacity: 0;
   filter: drop-shadow(0 0 8px rgba(150, 120, 255, 0.8))
           drop-shadow(0 0 22px rgba(150, 120, 255, 0.45));
 }
 body.armed-wheel #arm-ring,
-body.armed-wheel #arm-ring-outer,
-body.armed-wheel #arm-hub,
-body.armed-wheel #arm-hub-inner {
+body.armed-wheel #arm-hub {
   opacity: 0.72;
   animation: arm-ring-pulse 1.4s ease-in-out infinite;
 }
 body.wheel-powering-down #arm-ring,
-body.wheel-powering-down #arm-ring-outer,
-body.wheel-powering-down #arm-hub,
-body.wheel-powering-down #arm-hub-inner {
+body.wheel-powering-down #arm-hub {
   animation: wheel-power-down 1.2s ease-out forwards;
 }
 @keyframes arm-ring-pulse {
@@ -573,9 +540,7 @@ body.wheel-powering-down #arm-hub-inner {
   body::before { animation: none; }
   body.armed-mask .arm-glow  { opacity: 0.45; }
   body.armed-wheel #arm-ring,
-  body.armed-wheel #arm-ring-outer,
-  body.armed-wheel #arm-hub,
-  body.armed-wheel #arm-hub-inner { animation: none; opacity: 0.72; }
+  body.armed-wheel #arm-hub { animation: none; opacity: 0.72; }
 }
 
 /* SVG text */
@@ -634,6 +599,7 @@ body.degree-drones-off .drone,
 body.degree-drones-off .shadow {
   animation: none;
 }
+body.degree-drones-off .shadow { display: none; }
 
 @keyframes float {
   0%, 100% { transform: translateY(-4px); }

@@ -10,7 +10,7 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 // ---------------------------------------------------------------- geometry
 /* Ring geometry in SVG user units. */
 const CX = 500, CY = 500;
-const R_HUB   = 100;    // blank centre
+const R_HUB   = 90;     // blank centre
 const R_DIM   = 192;   // outer edge of the diminished ring
 const R_MINOR = 293;   // outer edge of the minor ring
 const R_MAJOR = 400;   // outer edge of the major ring

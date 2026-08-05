@@ -99,10 +99,21 @@
     eq('formats the relative minor as a chord', doc.getElementById('dash-minor').textContent, 'Am');
     eq('formats minor chords in the dashboard', doc.getElementById('dash-chords').textContent,
       'C · Dm · Em · F · G · Am · B°');
+    ok('animation disable toggles start enabled',
+      maskGlow.checked && wheelGlow.checked && degreeDrones.checked &&
+      doc.body.classList.contains('mask-glow-off') &&
+      doc.body.classList.contains('wheel-glow-off') &&
+      doc.body.classList.contains('degree-drones-off'),
+      'one or more animation disable toggles are not applied by default');
+    eq('disabled degree animation hides degree shadows',
+      win.getComputedStyle(doc.querySelector('.shadow')).display, 'none');
     eq('lists C modes by selected note then alphabetically', doc.getElementById('dash-modes').textContent,
       'C Ionian\nA Aeolian\nB Locrian\nD Dorian\nE Phrygian\nF Lydian\nG Mixolydian');
     eq('first screen has one guide link', doc.querySelectorAll('.guide .more').length, 1);
     eq('desktop player sits below the dashboard', win.getComputedStyle(doc.getElementById('key-player')).position, 'static');
+    eq('wheel glow uses one line per cell boundary', doc.querySelectorAll('#arm-ring, #arm-hub').length, 2);
+    eq('wheel glow omits duplicate boundary lines',
+      doc.querySelectorAll('#arm-ring-outer, #arm-hub-inner').length, 0);
 
     wheelPrevious.click();
     eq('wheel previous selects F', selected(), KEYS[KEYS.length - 1].major);
@@ -158,6 +169,10 @@
       ok(`${name} applies its visual state`, doc.body.classList.contains(className));
       toggle.checked = false;
       toggle.dispatchEvent(new Event('change', { bubbles: true }));
+      if (toggle === degreeDrones) {
+        eq('enabled degree animation restores degree shadows',
+          win.getComputedStyle(doc.querySelector('.shadow')).display, 'inline');
+      }
     });
 
     reset.click();

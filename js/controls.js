@@ -34,6 +34,14 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     wheel:   'Use the arrows to turn the circle'
   };
 
+  function syncAnimationToggles() {
+    document.body.classList.toggle('mask-glow-off', Boolean(maskGlowToggle?.checked));
+    document.body.classList.toggle('wheel-glow-off', Boolean(wheelGlowToggle?.checked));
+    document.body.classList.toggle('degree-drones-off', Boolean(degreeDroneToggle?.checked));
+  }
+
+  syncAnimationToggles();
+
   function powerDownWheelGlow() {
     const ring = document.getElementById('arm-ring');
     const opacity = ring ? getComputedStyle(ring).opacity : '0.95';
@@ -188,18 +196,18 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   }
   if (maskGlowToggle) {
     maskGlowToggle.addEventListener('change', () => {
-      document.body.classList.toggle('mask-glow-off', maskGlowToggle.checked);
+      syncAnimationToggles();
       if (mode === 'mask') spot.setArmed(true);
     });
   }
   if (wheelGlowToggle) {
     wheelGlowToggle.addEventListener('change', () => {
-      document.body.classList.toggle('wheel-glow-off', wheelGlowToggle.checked);
+      syncAnimationToggles();
     });
   }
   if (degreeDroneToggle) {
     degreeDroneToggle.addEventListener('change', () => {
-      document.body.classList.toggle('degree-drones-off', degreeDroneToggle.checked);
+      syncAnimationToggles();
     });
   }
 
