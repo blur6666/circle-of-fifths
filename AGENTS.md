@@ -29,6 +29,14 @@ The canonical preview URL is `http://127.0.0.1:4173/`.
 - Report which viewport sizes and interactions were checked. If browser tooling
   is unavailable, say so explicitly; do not describe source inspection as a
   completed browser validation.
+- Hovering a staff from automation needs animations suppressed first. The
+  `staff-drift` animation never settles, so a driver that waits for the element
+  to be "stable" will time out. Inject
+  `*, *::before, *::after { animation: none !important; transition: none !important; }`
+  before the hover. Same reason a degree-label position read mid-animation is
+  a few units off its resting radius — that is `float`, not drift.
+- Save screenshots under `.playwright-mcp/`, which is gitignored. A bare
+  filename lands in the repository root and shows up as an untracked stray.
 
 ## Ownership
 
