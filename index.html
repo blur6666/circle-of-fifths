@@ -155,11 +155,15 @@
 </label>
 
 <!-- Load order is load-bearing. config.js creates the CF namespace and every later
-     file attaches to it, so each must come after the ones it reads. script.js is
+     file attaches to it, so each must come after the ones it reads. main.js is
      the entry point and is the only file that runs anything on load. -->
 <script src="js/config.js"></script>
 <script src="js/geometry.js"></script>
 <script src="js/staves.js"></script>
-<script src="script.js"></script>
+<script src="js/spotlight.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

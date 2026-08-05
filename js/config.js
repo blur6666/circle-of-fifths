@@ -148,3 +148,6 @@ return {
 };
 
 })();
+
+// Disabled until the unresolved pointer-drag direction bug is fixed.
+CF.config.dragEnabled = false;
