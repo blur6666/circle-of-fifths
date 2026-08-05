@@ -8,3 +8,6 @@ Thumbs.db
 
 # Local dev screenshots that capture browser chrome (leak local paths)
 image2*.png
+
+# Owner's local working log
+TODO.md
