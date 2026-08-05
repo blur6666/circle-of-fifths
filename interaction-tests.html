@@ -125,8 +125,13 @@
     ok('the mask starts marked as pressed', hideMask.getAttribute('aria-pressed') === 'true' &&
       hideMask.classList.contains('is-hidden'),
       'the mask label does not reflect a hidden mask on load');
-    eq('the mask arrows start hidden',
-      win.getComputedStyle(maskNext.parentElement).display, 'none');
+    ok('the mask arrows start greyed out rather than hidden',
+      maskNext.disabled && maskPrevious.disabled &&
+      win.getComputedStyle(maskNext).display !== 'none' &&
+      win.getComputedStyle(maskNext.parentElement).display !== 'none',
+      'the mask arrows are hidden or still live while the mask is hidden');
+    eq('a dead mask arrow drops its glow',
+      win.getComputedStyle(maskNext).boxShadow, 'none');
     eq('the dim chord toggle starts on', dimChords.checked, true);
     eq('the staff toggle starts on', staffToggle.checked, true);
     eq('the staffs start hidden', win.getComputedStyle(doc.getElementById('staves')).display, 'none');
@@ -200,13 +205,28 @@
     eq('hide-mask resets the position to C', selected(), KEYS[0].major);
     eq('hide-mask winds the mask back to the top',
       doc.getElementById('mask').getAttribute('transform'), `rotate(0 ${CX} ${CY})`);
-    eq('hide-mask takes the mask arrows away',
-      win.getComputedStyle(maskNext.parentElement).display, 'none');
+    ok('hide-mask greys the mask arrows out but leaves them in place',
+      maskNext.disabled && maskPrevious.disabled &&
+      win.getComputedStyle(maskNext.parentElement).display === 'flex',
+      'the mask arrows were removed instead of being disabled');
+    ok('the wheel arrows stay live while the mask is hidden',
+      !wheelNext.disabled && !wheelPrevious.disabled,
+      'hiding the mask disabled the wheel arrows too');
+    wheelNext.click();
+    await settle();
+    ok('arming the wheel does not revive the mask arrows', maskNext.disabled,
+      'the mask arrows came back to life when the wheel was armed');
     hideMask.click();
     await settle();
     eq('hide-mask restores the window', doc.getElementById('mask').style.display, '');
-    eq('showing the mask brings its arrows back',
-      win.getComputedStyle(maskNext.parentElement).display, 'flex');
+    ok('showing the mask brings its arrows back to life',
+      !maskNext.disabled && !maskPrevious.disabled,
+      'the mask arrows are still disabled after showing the mask');
+    const beforeRevived = selected();
+    maskNext.click();
+    await settle();
+    ok('the revived mask arrows turn the mask again', selected() !== beforeRevived,
+      'the mask did not move once its arrows came back');
 
     ok('the key name in the middle has no ring around it',
       !doc.querySelector('#hub circle').hasAttribute('stroke'),

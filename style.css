@@ -195,14 +195,10 @@ body.armed-wheel .wheel-control .arrow,
 .mask-control .arrow {
   box-shadow: 0 0 12px color-mix(in srgb, var(--control) 45%, transparent);
 }
-/* Nothing to aim while the window is hidden, so its arrows go with it. The wheel
-   column keeps the row at full height, so the panel does not jump - and the label
-   stays at the top of that column rather than drifting to its middle. */
-.mask-control.mask-hidden .arrows {
-  display: none;
-}
-.mask-control.mask-hidden {
-  align-content: start;
+/* Comes after the glow so a dead arrow cannot keep looking live: nothing is aimable
+   while the window is hidden, so the mask arrows grey out rather than leaving. */
+.arrow:disabled {
+  box-shadow: none;
 }
 
 .reset {

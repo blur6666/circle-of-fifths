@@ -18,6 +18,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves, setDimRingVisi
   const drawn  = { mask: 0, wheel: 0 };   // where each layer actually is
   let raf  = null;
   let mode = null;                        // null | 'mask' | 'wheel'
+  let maskHidden = false;                 // a hidden window cannot be aimed
   let wheelPowerDown = null;
   let drag = null;
 
@@ -119,6 +120,14 @@ function wireControls(spot, showKey, disc, uprights, placeStaves, setDimRingVisi
     raf = requestAnimationFrame(tick);
   }
 
+  /* Nothing is aimable until a layer is armed, and the mask arrows stay dead for as
+     long as the window they move is hidden. */
+  function syncStepButtons() {
+    steps.forEach(b => {
+      b.disabled = !mode || (maskHidden && b.dataset.layer === 'mask');
+    });
+  }
+
   /* Arming is shown in three places at once, because the whole point is that the
      next move should be obvious: the chosen button lights, the arrows come alive,
      and the thing that will move starts pulsing on the wheel itself. */
@@ -127,7 +136,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves, setDimRingVisi
     if (next === 'wheel') cancelWheelPowerDown();
     else if (leavingWheel) powerDownWheelGlow();
     mode = next;
-    steps.forEach(b => { b.disabled = !mode; });
+    syncStepButtons();
     document.body.classList.toggle('armed-mask',  mode === 'mask');
     document.body.classList.toggle('armed-wheel', mode === 'wheel');
     spot.setArmed(mode === 'mask');
@@ -202,12 +211,14 @@ function wireControls(spot, showKey, disc, uprights, placeStaves, setDimRingVisi
   /* `reset` is off for the initial pass: the wheel is still being set up and is on C
      already, so there is nothing to wind back. */
   function applyMaskHidden(hidden, reset) {
+    maskHidden = hidden;
     hideMask.setAttribute('aria-pressed', String(hidden));
     hideMask.setAttribute('aria-label', hidden ? 'Show mask' : 'Hide mask');
     hideMask.classList.toggle('is-hidden', hidden);
     hideMask.closest('.mask-control')?.classList.toggle('mask-hidden', hidden);
     spot.setVisible(!hidden);
-    // the mask arrows go with the window; put the wheel back on C as it leaves
+    syncStepButtons();
+    // the mask arrows grey out with the window; put the wheel back on C as it leaves
     if (hidden && reset) resetToC();
   }
 
