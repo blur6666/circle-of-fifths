@@ -18,6 +18,7 @@ const { buildSpotlight } = CF.spotlight;
 // ----------------------------------------------------------------- naming
 const twoNames = s => s.includes('/');
 const MODE_NAMES = ['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'];
+const minorChord = name => name.split('/').map(note => `${note[0].toUpperCase()}${note.slice(1)}m`).join('/');
 const sigText = k => {
   const parts = [];
   if (k.flats) parts.push(`${k.flats} flats`);
@@ -43,17 +44,22 @@ function buildHub(svg) {
 
   return i => {
     const k = KEYS[i];
-    const previous = KEYS[(i + KEYS.length - 1) % KEYS.length];
-    const next = KEYS[(i + 1) % KEYS.length];
     name.textContent = k.major;
     name.setAttribute('font-size', twoNames(k.major) ? 30 : 58);
     name.setAttribute('fill', textMaj(i));
     if (dashMajor) dashMajor.textContent = k.major;
-    if (dashMinor) dashMinor.textContent = k.minor;
+    if (dashMinor) dashMinor.textContent = minorChord(k.minor);
     if (dashDim) dashDim.textContent = k.dim;
     if (dashSignature) dashSignature.textContent = sigText(k);
-    if (dashChords) dashChords.textContent =
-      `${previous.major} · ${k.major} · ${next.major} / ${previous.minor} · ${k.minor} · ${next.minor} / ${k.dim}`;
+    if (dashChords) dashChords.textContent = [
+      k.major,
+      minorChord(k.scale[1]),
+      minorChord(k.scale[2]),
+      k.scale[3],
+      k.scale[4],
+      minorChord(k.scale[5]),
+      k.dim
+    ].join(' · ');
     if (dashModes) {
       const [selectedMode, ...otherModes] = k.scale.map((note, degree) => ({
         note, label: `${note} ${MODE_NAMES[degree]}`
@@ -118,7 +124,7 @@ function draw() {
                             : text(labels, k.dim, dimAttrs), dmx, dmy);
 
     const [mnx, mny] = pt(R_MINOR_TEXT, mid);
-    upright(text(labels, k.minor, {
+    upright(text(labels, minorChord(k.minor), {
       x: mnx, y: mny, class: 'minor-label',
       'font-size': FS_MINOR(twoNames(k.minor)), fill: textMin(i)
     }), mnx, mny);

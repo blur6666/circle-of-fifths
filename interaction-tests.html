@@ -96,6 +96,9 @@
     const firstMajorAnchor = firstMajor.getAttribute('transform').slice('rotate(0'.length);
 
     eq('starts on C', selected(), KEYS[0].major);
+    eq('formats the relative minor as a chord', doc.getElementById('dash-minor').textContent, 'Am');
+    eq('formats minor chords in the dashboard', doc.getElementById('dash-chords').textContent,
+      'C · Dm · Em · F · G · Am · B°');
     eq('lists C modes by selected note then alphabetically', doc.getElementById('dash-modes').textContent,
       'C Ionian\nA Aeolian\nB Locrian\nD Dorian\nE Phrygian\nF Lydian\nG Mixolydian');
     eq('first screen has one guide link', doc.querySelectorAll('.guide .more').length, 1);
