@@ -25,33 +25,61 @@
       <div class="side">
         <p>Spin the Circle!</p>
         <p class="hint" id="hint" aria-live="polite"></p>
-        <div class="arrows">
-          <button class="arrow" data-step="-1" aria-label="Previous key">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <g transform="translate(0 -8)"><polyline points="6 15 12 9 18 15"/></g>
-              <g transform="translate(0 0)"><polyline points="6 15 12 9 18 15"/></g>
-              <g transform="translate(0 8)"><polyline points="6 15 12 9 18 15"/></g>
-            </svg>
-          </button>
-          <button class="arrow" data-step="1" aria-label="Next key">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <g transform="translate(0 -8)"><polyline points="6 9 12 15 18 9"/></g>
-              <g transform="translate(0 0)"><polyline points="6 9 12 15 18 9"/></g>
-              <g transform="translate(0 8)"><polyline points="6 9 12 15 18 9"/></g>
-            </svg>
-          </button>
+        <div class="motion-controls">
+          <div class="arrow-control wheel-control">
+            <span>Wheel</span>
+            <div class="arrows">
+              <button class="arrow" data-layer="wheel" data-step="-1" aria-label="Previous key with wheel">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <g transform="translate(0 -8)"><polyline points="6 15 12 9 18 15"/></g>
+                  <g transform="translate(0 0)"><polyline points="6 15 12 9 18 15"/></g>
+                  <g transform="translate(0 8)"><polyline points="6 15 12 9 18 15"/></g>
+                </svg>
+              </button>
+              <button class="arrow" data-layer="wheel" data-step="1" aria-label="Next key with wheel">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <g transform="translate(0 -8)"><polyline points="6 9 12 15 18 9"/></g>
+                  <g transform="translate(0 0)"><polyline points="6 9 12 15 18 9"/></g>
+                  <g transform="translate(0 8)"><polyline points="6 9 12 15 18 9"/></g>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="arrow-control mask-control">
+            <span>Mask</span>
+            <div class="mask-actions">
+              <div class="arrows">
+                <button class="arrow" data-layer="mask" data-step="-1" aria-label="Previous key with mask">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <g transform="translate(0 -8)"><polyline points="6 15 12 9 18 15"/></g>
+                    <g transform="translate(0 0)"><polyline points="6 15 12 9 18 15"/></g>
+                    <g transform="translate(0 8)"><polyline points="6 15 12 9 18 15"/></g>
+                  </svg>
+                </button>
+                <button class="arrow" data-layer="mask" data-step="1" aria-label="Next key with mask">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <g transform="translate(0 -8)"><polyline points="6 9 12 15 18 9"/></g>
+                    <g transform="translate(0 0)"><polyline points="6 9 12 15 18 9"/></g>
+                    <g transform="translate(0 8)"><polyline points="6 9 12 15 18 9"/></g>
+                  </svg>
+                </button>
+              </div>
+              <button class="mask-visibility" id="hide-mask" type="button" aria-label="Hide mask" aria-pressed="false">
+                <svg class="mask-visible-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/>
+                  <circle cx="12" cy="12" r="2.5"/>
+                </svg>
+                <svg class="mask-hidden-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m3 3 18 18M10.6 6.2A10.4 10.4 0 0 1 12 6c6 0 9.5 6 9.5 6a16.4 16.4 0 0 1-3.1 3.7M6.2 6.2A16.7 16.7 0 0 0 2.5 12S6 18 12 18a10.3 10.3 0 0 0 1.8-.2"/>
+                  <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <button class="reset" id="reset">Reset</button>
 
-        <label class="move-mask" for="move-mask">
-          <input id="move-mask" type="checkbox">
-          <span>Move mask instead</span>
-        </label>
-        <label class="hide-mask" for="hide-mask">
-          <input id="hide-mask" type="checkbox">
-          <span>Hide mask</span>
-        </label>
       </div>
 
       <svg id="wheel" xmlns="http://www.w3.org/2000/svg"
@@ -69,17 +97,11 @@
             <div><dt>Modes</dt><dd id="dash-modes">C Ionian · D Dorian · E Phrygian · F Lydian · G Mixolydian · A Aeolian · B Locrian</dd></div>
           </dl>
         </section>
-        <h2>How to read it</h2>
-        <div class="warning-alert" role="status" aria-label="non-reviewed AI generated warning">
-          <strong>NON REVIEWED AI GENERATED</strong>
-          <span>So take it with a <s>grain</s> mountain of salt ;)</span>
-        </div>
-        <ol class="reading-steps">
-          <li>Start at the lit <strong>major</strong> cell: it names the current key.</li>
-          <li>Read inward for its <strong>relative minor</strong> and <strong>diminished</strong> chord; read outward for the staff signature.</li>
-          <li>The window contains the seven chords of that key. Nearby slices share more notes; opposite slices share the least.</li>
-        </ol>
-        <p class="more"><a href="#about-screen">Read the full guide ↓</a></p>
+        <button class="key-player" id="key-player" type="button" aria-label="Play selected key" aria-pressed="false">
+          <svg class="key-player-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="key-player-stop" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg>
+        </button>
+        <p class="more"><a href="#about-screen">How to read it <span aria-hidden="true">↓</span></a></p>
       </aside>
 
     </div>
@@ -102,11 +124,10 @@
       </div>
     </div>
     <h2>Working it</h2>
-    <p>Nothing turns until you say what should. <strong>Mask</strong> slides the window
-      over a wheel that stays put; <strong>Wheel</strong> turns the wheel under a window
-      that stays put, the way a cardboard one does. Once armed, the arrows come alive and
-      the thing that will move starts pulsing — the window outline breathes, or the rim
-      and hub glow. One press is one slice, either direction, for as long as you like.
+    <p><strong>Mask</strong> arrows slide the window over a wheel that stays put;
+      <strong>Wheel</strong> arrows turn the wheel under a window that stays put, the way
+      a cardboard one does. The layer you last moved starts pulsing — the window outline
+      breathes, or the rim and hub glow. One press is one slice, either direction, for as long as you like.
       <strong>Reset</strong> puts C back on top and keeps the current movement mode armed.</p>
     <p>The centre always reads out the key the window is on.</p>
 
@@ -140,11 +161,6 @@
       carries both — <strong>Gb/F#</strong> — and its staff shows both signatures. The
       rest of the wheel commits to one spelling each.</p>
   </section>
-
-  <button class="key-player" id="key-player" type="button" aria-label="Play selected key" aria-pressed="false">
-    <svg class="key-player-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-    <svg class="key-player-stop" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg>
-  </button>
 
   <label class="glow-toggle" for="mask-glow-toggle">
     <input id="mask-glow-toggle" type="checkbox">

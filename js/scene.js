@@ -17,6 +17,7 @@ const { buildSpotlight } = CF.spotlight;
 
 // ----------------------------------------------------------------- naming
 const twoNames = s => s.includes('/');
+const MODE_NAMES = ['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'];
 const sigText = k => {
   const parts = [];
   if (k.flats) parts.push(`${k.flats} flats`);
@@ -53,8 +54,13 @@ function buildHub(svg) {
     if (dashSignature) dashSignature.textContent = sigText(k);
     if (dashChords) dashChords.textContent =
       `${previous.major} · ${k.major} · ${next.major} / ${previous.minor} · ${k.minor} · ${next.minor} / ${k.dim}`;
-    if (dashModes) dashModes.textContent = k.scale.map((note, degree) =>
-      `${note} ${['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'][degree]}`).join(' · ');
+    if (dashModes) {
+      const [selectedMode, ...otherModes] = k.scale.map((note, degree) => ({
+        note, label: `${note} ${MODE_NAMES[degree]}`
+      }));
+      otherModes.sort((a, b) => a.note.split('/')[0].localeCompare(b.note.split('/')[0]));
+      dashModes.textContent = [selectedMode, ...otherModes].map(mode => mode.label).join('\n');
+    }
   };
 }
 

@@ -66,10 +66,11 @@
     const win = frame.contentWindow;
     const { KEYS, CX, CY } = win.CF.config;
     const { DUR } = win.CF.geometry;
-    const previous = doc.querySelector('[data-step="-1"]');
-    const next = doc.querySelector('[data-step="1"]');
+    const wheelPrevious = doc.querySelector('[data-layer="wheel"][data-step="-1"]');
+    const wheelNext = doc.querySelector('[data-layer="wheel"][data-step="1"]');
+    const maskPrevious = doc.querySelector('[data-layer="mask"][data-step="-1"]');
+    const maskNext = doc.querySelector('[data-layer="mask"][data-step="1"]');
     const reset = doc.getElementById('reset');
-    const moveMask = doc.getElementById('move-mask');
     const hideMask = doc.getElementById('hide-mask');
     const maskGlow = doc.getElementById('mask-glow-toggle');
     const wheelGlow = doc.getElementById('wheel-glow-toggle');
@@ -95,14 +96,18 @@
     const firstMajorAnchor = firstMajor.getAttribute('transform').slice('rotate(0'.length);
 
     eq('starts on C', selected(), KEYS[0].major);
+    eq('lists C modes by selected note then alphabetically', doc.getElementById('dash-modes').textContent,
+      'C Ionian\nA Aeolian\nB Locrian\nD Dorian\nE Phrygian\nF Lydian\nG Mixolydian');
+    eq('first screen has one guide link', doc.querySelectorAll('.guide .more').length, 1);
+    eq('desktop player sits below the dashboard', win.getComputedStyle(doc.getElementById('key-player')).position, 'static');
 
-    previous.click();
+    wheelPrevious.click();
     eq('wheel previous selects F', selected(), KEYS[KEYS.length - 1].major);
-    next.click();
+    wheelNext.click();
     eq('wheel next returns to C', selected(), KEYS[0].major);
     await settle();
 
-    next.click();
+    wheelNext.click();
     eq('wheel next selects G', selected(), KEYS[1].major);
     await settle();
     eq('wheel rotates one sector', doc.getElementById('disc').getAttribute('transform'),
@@ -112,30 +117,33 @@
       'the first major label did not rotate opposite to the disc');
 
     for (let i = 2; i < KEYS.length; i += 1) {
-      next.click();
+      wheelNext.click();
       eq(`wheel next selects ${KEYS[i].major}`, selected(), KEYS[i].major);
     }
-    next.click();
+    wheelNext.click();
     eq('wheel wraps to C after twelve steps', selected(), KEYS[0].major);
     await settle();
     eq('wheel labels remain counter-rotated after a full turn',
       firstMajor.getAttribute('transform'), `rotate(360${firstMajorAnchor}`);
 
-    moveMask.checked = true;
-    moveMask.dispatchEvent(new Event('change', { bubbles: true }));
-    next.click();
+    maskNext.click();
     eq('mask next selects G', selected(), KEYS[1].major);
     await settle();
     eq('mask rotates while wheel stays put', doc.getElementById('mask').getAttribute('transform'),
       `rotate(${win.CF.config.SECTOR} ${CX} ${CY})`);
     eq('mask mode keeps the wheel at its settled angle', doc.getElementById('disc').getAttribute('transform'),
       `rotate(${-360} ${CX} ${CY})`);
+    ok('chord value stays on one line',
+      doc.getElementById('dash-chords').scrollWidth <= doc.getElementById('dash-chords').clientWidth,
+      'the chord value overflows its dashboard cell');
+    maskPrevious.click();
+    eq('mask previous returns to C', selected(), KEYS[0].major);
 
-    hideMask.checked = true;
-    hideMask.dispatchEvent(new Event('change', { bubbles: true }));
+    hideMask.click();
     eq('hide-mask hides the window', doc.getElementById('mask').style.display, 'none');
-    hideMask.checked = false;
-    hideMask.dispatchEvent(new Event('change', { bubbles: true }));
+    eq('hide-mask exposes a show action when hidden', hideMask.getAttribute('aria-label'), 'Show mask');
+    hideMask.click();
+    eq('hide-mask restores the window', doc.getElementById('mask').style.display, '');
 
     [
       [maskGlow, 'mask-glow-off', 'mask glow toggle'],

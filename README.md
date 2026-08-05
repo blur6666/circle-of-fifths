@@ -8,7 +8,7 @@ An interactive circle of fifths for exploring major keys, relative minors, dimin
 
 ## How to use it
 
-Choose whether the arrows move the **wheel** or the **mask**. The arrows move one key at a time, and **Reset** returns the view to C. The window frames the selected key's seven diatonic chords: I, ii, iii, IV, V, vi, and vii°. The centre and dashboard read the major key framed by the window, along with its relative minor, diminished chord, signature, chords, and modes.
+Use the dedicated **wheel** or **mask** arrows to move one key at a time. **Reset** returns the view to C. The window frames the selected key's seven diatonic chords: I, ii, iii, IV, V, vi, and vii°. The centre and dashboard read the major key framed by the window, along with its relative minor, diminished chord, signature, chords, and modes.
 
 At the end of the screen there are options to disable the visual effects. The play button plays the selected major scale followed by its diatonic triads; press it again to stop.
 

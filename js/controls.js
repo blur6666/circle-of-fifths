@@ -23,7 +23,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
 
   const hint  = document.getElementById('hint');
   const wheelSvg = document.getElementById('wheel');
-  const moveMask = document.getElementById('move-mask');
   const hideMask = document.getElementById('hide-mask');
   const maskGlowToggle = document.getElementById('mask-glow-toggle');
   const wheelGlowToggle = document.getElementById('wheel-glow-toggle');
@@ -106,7 +105,6 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     if (next === 'wheel') cancelWheelPowerDown();
     else if (leavingWheel) powerDownWheelGlow();
     mode = next;
-    if (moveMask) moveMask.checked = mode === 'mask';
     steps.forEach(b => { b.disabled = !mode; });
     document.body.classList.toggle('armed-mask',  mode === 'mask');
     document.body.classList.toggle('armed-wheel', mode === 'wheel');
@@ -116,12 +114,10 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
 
   /* One step of a twelfth. The arrows always mean "next key / previous key", so in
      wheel mode the disc turns the other way to bring that key up to the window. */
-  function step(dir) {
-    if (!mode) return;
-    if (mode === 'mask') target.mask  += dir * SECTOR;
-    else {
-      target.wheel -= dir * SECTOR;
-    }
+  function step(layer, dir) {
+    setMode(layer);
+    if (layer === 'mask') target.mask += dir * SECTOR;
+    else target.wheel -= dir * SECTOR;
     showKey(keyIndex());
     glide();
   }
@@ -151,7 +147,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   }
 
   steps.forEach(btn =>
-    btn.addEventListener('click', () => step(Number(btn.dataset.step))));
+    btn.addEventListener('click', () => step(btn.dataset.layer, Number(btn.dataset.step))));
 
   // Leave the drag code intact, but do not attach listeners while its direction bug is unresolved.
   if (dragEnabled && wheelSvg) {
@@ -181,14 +177,13 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     });
   }
 
-  if (moveMask) {
-    moveMask.addEventListener('change', () => {
-      setMode(moveMask.checked ? 'mask' : 'wheel');
-    });
-  }
   if (hideMask) {
-    hideMask.addEventListener('change', () => {
-      spot.setVisible(!hideMask.checked);
+    hideMask.addEventListener('click', () => {
+      const hidden = hideMask.getAttribute('aria-pressed') !== 'true';
+      hideMask.setAttribute('aria-pressed', String(hidden));
+      hideMask.setAttribute('aria-label', hidden ? 'Show mask' : 'Hide mask');
+      hideMask.classList.toggle('is-hidden', hidden);
+      spot.setVisible(!hidden);
     });
   }
   if (maskGlowToggle) {
@@ -214,7 +209,7 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     drawn.mask  = norm(drawn.mask);
     drawn.wheel = norm(drawn.wheel);
     target.mask = target.wheel = 0;
-    setMode(moveMask && moveMask.checked ? 'mask' : 'wheel');
+    setMode(mode || 'wheel');
     showKey(0);
     glide();
   });
