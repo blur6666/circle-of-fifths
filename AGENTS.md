@@ -58,6 +58,14 @@ The canonical preview URL is `http://127.0.0.1:4173/`.
   Update the dashboard through `showKey()` whenever that selected key changes.
 - The mask, wheel, labels, and staves have different rotation rules. Preserve
   the counter-rotation logic in `setWheel()` and `buildSpotlight().setAngle()`.
+- Any element that receives a counter-rotating `transform="rotate(-a x y)"`
+  attribute must keep `transform-box: view-box` and `transform-origin: 0 0`.
+  The attribute maps to the CSS transform property, so those two decide what
+  `x y` is measured from; `fill-box`/`center` made the degree labels swing out
+  of the wheel entirely. Leaving both off is not a fix — the CSS default
+  `transform-origin: 50% 50%` is wrong in the same way. See `.hover-container`
+  in `style.css`. `tests.html` cannot catch this; it must be checked in a
+  browser by turning the mask in both directions.
 
 ## Visual And Accessibility Checks
 

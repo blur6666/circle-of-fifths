@@ -553,9 +553,17 @@ body.wheel-powering-down #arm-hub-inner {
   50%      { transform: translateY(-1px) scale(1.01); }
 }
 
+/* This is the element buildSpotlight().setAngle() counter-rotates, via an SVG
+   `transform="rotate(-a x y)"` attribute. That attribute maps to the CSS transform
+   property, so transform-box and transform-origin decide what the `x y` centre is
+   measured from — it must be user space, or the label swings out on an arc hundreds
+   of units wide as the mask turns. `fill-box` + `center` here did exactly that.
+   Both properties are stated explicitly rather than left off: the CSS default
+   transform-origin is 50% 50%, which is just as wrong. The float and shadow-pulse
+   animations below still want fill-box centring, but they run on the children. */
 .hover-container {
-  transform-box: fill-box;
-  transform-origin: center;
+  transform-box: view-box;
+  transform-origin: 0 0;
 }
 
 .drone {
