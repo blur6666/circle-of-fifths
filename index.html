@@ -46,7 +46,7 @@
             </div>
           </div>
           <div class="arrow-control mask-control">
-            <button class="mask-label" id="hide-mask" type="button" aria-label="Hide mask" aria-pressed="false">Mask</button>
+            <button class="mask-label" id="hide-mask" type="button" aria-label="Show mask" aria-pressed="true">Mask</button>
             <div class="arrows">
               <button class="arrow" data-layer="mask" data-step="-1" aria-label="Previous key with mask">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -67,6 +67,15 @@
         </div>
 
         <button class="reset" id="reset">Reset</button>
+
+        <label class="side-toggle" for="dim-chord-toggle">
+          <input id="dim-chord-toggle" type="checkbox" checked>
+          <span>hide dim chords</span>
+        </label>
+        <label class="side-toggle" for="staff-toggle">
+          <input id="staff-toggle" type="checkbox" checked>
+          <span>hide staffs</span>
+        </label>
 
       </div>
 

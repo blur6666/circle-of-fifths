@@ -21,17 +21,29 @@ const { pt, el, text, circlePath } = CF.geometry;
    and takes no account of the staves hanging outside it - they are never dimmed,
    blurred or lit by the spotlight, whichever key is selected. R_RIM only frames the
    viewBox. */
-function windowPath() {
+function windowPath(withDim = true) {
   const w = SECTOR * 1.5;   // 45 degrees - half-width of the 3-cell part
   const n = SECTOR * 0.5;   // 15 degrees - half-width of the 1-cell part
   const [ax, ay] = pt(R_MASK_OUT, -w), [bx, by] = pt(R_MASK_OUT, w);
-  const [cx, cy] = pt(R_DIM,  w), [dx, dy] = pt(R_DIM,  n);
+  const [cx, cy] = pt(R_DIM,  w), [hx, hy] = pt(R_DIM, -w);
+  const wide = `M${ax} ${ay} A${R_MASK_OUT} ${R_MASK_OUT} 0 0 1 ${bx} ${by} L${cx} ${cy}`;
+  /* With the diminished ring off the wheel there is no 1-cell part to frame, so the
+     window closes straight across R_DIM and becomes a plain 3-cell arc. */
+  if (!withDim) return `${wide} A${R_DIM} ${R_DIM} 0 0 0 ${hx} ${hy} Z`;
+  const [dx, dy] = pt(R_DIM,  n);
   const [ex, ey] = pt(R_HUB,  n), [fx, fy] = pt(R_HUB, -n);
-  const [gx, gy] = pt(R_DIM, -n), [hx, hy] = pt(R_DIM, -w);
-  return `M${ax} ${ay} A${R_MASK_OUT} ${R_MASK_OUT} 0 0 1 ${bx} ${by}` +
-         ` L${cx} ${cy} A${R_DIM} ${R_DIM} 0 0 0 ${dx} ${dy}` +
+  const [gx, gy] = pt(R_DIM, -n);
+  return `${wide} A${R_DIM} ${R_DIM} 0 0 0 ${dx} ${dy}` +
          ` L${ex} ${ey} A${R_HUB} ${R_HUB} 0 0 0 ${fx} ${fy}` +
          ` L${gx} ${gy} A${R_DIM} ${R_DIM} 0 0 0 ${hx} ${hy} Z`;
+}
+
+/* The window plus the region the scrim and veil cover: everything on the disc but
+   the window and the blank middle. That middle grows to R_DIM when the diminished
+   ring is hidden, so the emptied band is left clean rather than dimmed. */
+function spotPaths(withDim) {
+  const win = windowPath(withDim);
+  return { win, outside: `${circlePath(R_OUT)} ${circlePath(withDim ? R_HUB : R_DIM)} ${win}` };
 }
 
 /* Three layers, all keyed to the same window shape:
@@ -42,8 +54,7 @@ function windowPath() {
    cuts it away the original shows through untouched. Clipping happens after
    filtering, which is what keeps the window edge crisp. */
 function buildSpotlight(svg, defs) {
-  const win     = windowPath();
-  const outside = `${circlePath(R_OUT)} ${circlePath(R_HUB)} ${win}`;
+  const { win, outside } = spotPaths(true);
 
   const clip  = el('clipPath', { id: 'spot-outside', clipPathUnits: 'userSpaceOnUse' }, defs);
   const shape = el('path', { d: outside, 'clip-rule': 'evenodd' }, clip);
@@ -79,11 +90,13 @@ function buildSpotlight(svg, defs) {
   }, svg);
 
   const g = el('g', { id: 'mask', style: 'pointer-events: none' }, svg);
-  el('path', {
+  const scrimPath = el('path', {
     d: outside, 'fill-rule': 'evenodd', fill: 'url(#spot-scrim)'
   }, g);
   const degreeNodes = DEGREE_LABELS.map(([label, radius, angle, size], index) => {
     const [x, y] = pt(radius, angle);
+    // vii° is the only degree sitting inside the diminished ring, so it leaves with it
+    const isDim = radius < R_DIM;
     const animationDelay = `-${(index * 4) / DEGREE_LABELS.length}s`;
     const hoverContainer = el('g', { class: 'hover-container' }, g);
     text(hoverContainer, label, {
@@ -94,7 +107,7 @@ function buildSpotlight(svg, defs) {
       cx: x, cy: y + size * 0.65, rx: size * 0.95, ry: size * 0.19, class: 'shadow',
       style: `animation-delay: ${animationDelay}`
     }, hoverContainer);
-    return { node: hoverContainer, x, y };
+    return { node: hoverContainer, x, y, isDim };
   });
   /* The "you can turn this" cue for mask mode: the same window outline, drawn fat
      and invisible underneath the real one, pulsed by JS when body.armed-mask is
@@ -134,6 +147,19 @@ function buildSpotlight(svg, defs) {
       const display = visible ? '' : 'none';
       veil.style.display = display;
       g.style.display = display;
+    },
+    /* Reshape the window when the diminished ring comes and goes. Every path keyed to
+       the window has to be redrawn together - the edge, its glow, the scrim, and the
+       clip the veil is cut with - or they stop agreeing about where the window is. */
+    setDimVisible(visible) {
+      const p = spotPaths(visible);
+      shape.setAttribute('d', p.outside);
+      scrimPath.setAttribute('d', p.outside);
+      armGlow.setAttribute('d', p.win);
+      maskEdge.setAttribute('d', p.win);
+      for (const degree of degreeNodes) {
+        if (degree.isDim) degree.node.style.display = visible ? '' : 'none';
+      }
     },
     setArmed(armed) {
       const glowEnabled = armed && !document.body.classList.contains('mask-glow-off');

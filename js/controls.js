@@ -13,7 +13,7 @@ const { createKeyPlayer } = CF.audio;
    direction forever and 390° is a different number from 30° even though it draws the
    same. Only Reset normalises, so that "home" is one short spin away rather than
    thirteen. */
-function wireControls(spot, showKey, disc, uprights, placeStaves) {
+function wireControls(spot, showKey, disc, uprights, placeStaves, setDimRingVisible) {
   const target = { mask: 0, wheel: 0 };   // where each layer is headed
   const drawn  = { mask: 0, wheel: 0 };   // where each layer actually is
   let raf  = null;
@@ -27,6 +27,9 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
   const maskGlowToggle = document.getElementById('mask-glow-toggle');
   const wheelGlowToggle = document.getElementById('wheel-glow-toggle');
   const degreeDroneToggle = document.getElementById('degree-drone-toggle');
+  const dimChordToggle = document.getElementById('dim-chord-toggle');
+  const staffToggle = document.getElementById('staff-toggle');
+  const stavesGroup = document.getElementById('staves');
   const steps = [...document.querySelectorAll('[data-step]')];
 
   const HINTS = {
@@ -38,6 +41,17 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     document.body.classList.toggle('mask-glow-off', Boolean(maskGlowToggle?.checked));
     document.body.classList.toggle('wheel-glow-off', Boolean(wheelGlowToggle?.checked));
     document.body.classList.toggle('degree-drones-off', Boolean(degreeDroneToggle?.checked));
+    /* The diminished ring leaves the wheel entirely rather than just losing its
+       names, and the mask window closes over the gap it leaves behind. */
+    const showDim = !dimChordToggle?.checked;
+    document.body.classList.toggle('dim-chords-off', !showDim);
+    setDimRingVisible?.(showDim);
+    spot.setDimVisible(showDim);
+
+    // the staves hang outside #disc, so the whole group can simply go
+    const hideStaves = Boolean(staffToggle?.checked);
+    document.body.classList.toggle('staves-off', hideStaves);
+    if (stavesGroup) stavesGroup.style.display = hideStaves ? 'none' : '';
   }
 
   syncAnimationToggles();
@@ -185,13 +199,21 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     });
   }
 
+  /* `reset` is off for the initial pass: the wheel is still being set up and is on C
+     already, so there is nothing to wind back. */
+  function applyMaskHidden(hidden, reset) {
+    hideMask.setAttribute('aria-pressed', String(hidden));
+    hideMask.setAttribute('aria-label', hidden ? 'Show mask' : 'Hide mask');
+    hideMask.classList.toggle('is-hidden', hidden);
+    hideMask.closest('.mask-control')?.classList.toggle('mask-hidden', hidden);
+    spot.setVisible(!hidden);
+    // the mask arrows go with the window; put the wheel back on C as it leaves
+    if (hidden && reset) resetToC();
+  }
+
   if (hideMask) {
     hideMask.addEventListener('click', () => {
-      const hidden = hideMask.getAttribute('aria-pressed') !== 'true';
-      hideMask.setAttribute('aria-pressed', String(hidden));
-      hideMask.setAttribute('aria-label', hidden ? 'Show mask' : 'Hide mask');
-      hideMask.classList.toggle('is-hidden', hidden);
-      spot.setVisible(!hidden);
+      applyMaskHidden(hideMask.getAttribute('aria-pressed') !== 'true', true);
     });
   }
   if (maskGlowToggle) {
@@ -210,8 +232,21 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
       syncAnimationToggles();
     });
   }
+  if (dimChordToggle) {
+    dimChordToggle.addEventListener('change', () => {
+      syncAnimationToggles();
+    });
+  }
+  if (staffToggle) {
+    staffToggle.addEventListener('change', () => {
+      syncAnimationToggles();
+    });
+  }
 
-  document.getElementById('reset').addEventListener('click', () => {
+  /* Back to C, keeping whichever layer is armed armed. Shared with hiding the mask:
+     a hidden window cannot be aimed, so the wheel returns home rather than being left
+     parked on a key nothing is pointing at. */
+  function resetToC() {
     if (raf) { cancelAnimationFrame(raf); raf = null; }
     // wind the accumulated turns off first, so home is at most half a turn away
     drawn.mask  = norm(drawn.mask);
@@ -220,12 +255,16 @@ function wireControls(spot, showKey, disc, uprights, placeStaves) {
     setMode(mode || 'wheel');
     showKey(0);
     glide();
-  });
+  }
+
+  document.getElementById('reset').addEventListener('click', resetToC);
 
   spot.setAngle(0);
   setWheel(0);
   setMode('wheel');
   showKey(0);
+  // the markup declares which layers start hidden; honour it rather than repeat it
+  if (hideMask) applyMaskHidden(hideMask.getAttribute('aria-pressed') === 'true', false);
 }
 
 return { wireControls };

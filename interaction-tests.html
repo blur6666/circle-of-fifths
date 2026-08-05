@@ -75,6 +75,8 @@
     const maskGlow = doc.getElementById('mask-glow-toggle');
     const wheelGlow = doc.getElementById('wheel-glow-toggle');
     const degreeDrones = doc.getElementById('degree-drone-toggle');
+    const dimChords = doc.getElementById('dim-chord-toggle');
+    const staffToggle = doc.getElementById('staff-toggle');
     const selected = () => doc.getElementById('dash-major').textContent;
     let frameId = 0;
     const frames = new Map();
@@ -107,6 +109,8 @@
       'one or more animation disable toggles are not applied by default');
     eq('disabled degree animation hides degree shadows',
       win.getComputedStyle(doc.querySelector('.shadow')).display, 'none');
+    eq('disabled wheel glow really unlights the armed cue',
+      win.getComputedStyle(doc.getElementById('arm-hub')).opacity, '0');
     eq('lists C modes by selected note then alphabetically', doc.getElementById('dash-modes').textContent,
       'C Ionian\nA Aeolian\nB Locrian\nD Dorian\nE Phrygian\nF Lydian\nG Mixolydian');
     eq('first screen has one guide link', doc.querySelectorAll('.guide .more').length, 1);
@@ -114,6 +118,35 @@
     eq('wheel glow uses one line per cell boundary', doc.querySelectorAll('#arm-ring, #arm-hub').length, 2);
     eq('wheel glow omits duplicate boundary lines',
       doc.querySelectorAll('#arm-ring-outer, #arm-hub-inner').length, 0);
+
+    /* The wheel opens stripped back: no mask, no staffs, no diminished ring. */
+    eq('the mask starts hidden', doc.getElementById('mask').style.display, 'none');
+    eq('the mask label offers to show it', hideMask.getAttribute('aria-label'), 'Show mask');
+    ok('the mask starts marked as pressed', hideMask.getAttribute('aria-pressed') === 'true' &&
+      hideMask.classList.contains('is-hidden'),
+      'the mask label does not reflect a hidden mask on load');
+    eq('the mask arrows start hidden',
+      win.getComputedStyle(maskNext.parentElement).display, 'none');
+    eq('the dim chord toggle starts on', dimChords.checked, true);
+    eq('the staff toggle starts on', staffToggle.checked, true);
+    eq('the staffs start hidden', win.getComputedStyle(doc.getElementById('staves')).display, 'none');
+    ok('the diminished ring starts off the wheel',
+      [...doc.querySelectorAll('.dim-label, .dim-sector, .dim-seam')]
+        .every(el => win.getComputedStyle(el).display === 'none'),
+      'part of the diminished ring is still drawn on load');
+    ok('the mask window starts closed over the diminished band',
+      !doc.querySelector('#mask path:last-of-type').getAttribute('d')
+        .includes(`A${win.CF.config.R_HUB} ${win.CF.config.R_HUB}`),
+      'the mask window still dips into the hidden diminished ring on load');
+
+    /* Everything below drives the wheel with all three layers on, so put them back. */
+    hideMask.click();
+    dimChords.checked = false;
+    dimChords.dispatchEvent(new Event('change', { bubbles: true }));
+    staffToggle.checked = false;
+    staffToggle.dispatchEvent(new Event('change', { bubbles: true }));
+    await settle();
+    eq('showing the mask again reveals the window', doc.getElementById('mask').style.display, '');
 
     wheelPrevious.click();
     eq('wheel previous selects F', selected(), KEYS[KEYS.length - 1].major);
@@ -150,14 +183,45 @@
     ok('chord value stays on one line',
       doc.getElementById('dash-chords').scrollWidth <= doc.getElementById('dash-chords').clientWidth,
       'the chord value overflows its dashboard cell');
+    ok('the narrowed dashboard still holds every chord list',
+      [...doc.querySelectorAll('.dashboard-list dd')].every(dd => dd.scrollWidth <= dd.clientWidth),
+      'a dashboard value overflows the narrowed panel');
     maskPrevious.click();
     eq('mask previous returns to C', selected(), KEYS[0].major);
 
+    maskNext.click();
+    await settle();
+    ok('the wheel is off C before hiding the mask', selected() !== KEYS[0].major,
+      'the mask did not move off C, so the reset-on-hide check proves nothing');
     hideMask.click();
+    await settle();
     eq('hide-mask hides the window', doc.getElementById('mask').style.display, 'none');
     eq('hide-mask exposes a show action when hidden', hideMask.getAttribute('aria-label'), 'Show mask');
+    eq('hide-mask resets the position to C', selected(), KEYS[0].major);
+    eq('hide-mask winds the mask back to the top',
+      doc.getElementById('mask').getAttribute('transform'), `rotate(0 ${CX} ${CY})`);
+    eq('hide-mask takes the mask arrows away',
+      win.getComputedStyle(maskNext.parentElement).display, 'none');
     hideMask.click();
+    await settle();
     eq('hide-mask restores the window', doc.getElementById('mask').style.display, '');
+    eq('showing the mask brings its arrows back',
+      win.getComputedStyle(maskNext.parentElement).display, 'flex');
+
+    ok('the key name in the middle has no ring around it',
+      !doc.querySelector('#hub circle').hasAttribute('stroke'),
+      'the hub circle still carries a rim stroke');
+
+    staffToggle.checked = true;
+    staffToggle.dispatchEvent(new Event('change', { bubbles: true }));
+    eq('hiding the staffs takes the whole group off',
+      win.getComputedStyle(doc.getElementById('staves')).display, 'none');
+    ok('hiding the staffs applies its body class', doc.body.classList.contains('staves-off'));
+    staffToggle.checked = false;
+    staffToggle.dispatchEvent(new Event('change', { bubbles: true }));
+    ok('showing the staffs restores the group',
+      win.getComputedStyle(doc.getElementById('staves')).display !== 'none',
+      'the staff group is still hidden');
 
     [
       [maskGlow, 'mask-glow-off', 'mask glow toggle'],
@@ -174,6 +238,66 @@
           win.getComputedStyle(doc.querySelector('.shadow')).display, 'inline');
       }
     });
+
+    const dimLabels = [...doc.querySelectorAll('.dim-label')];
+    const dimSectors = [...doc.querySelectorAll('.dim-sector')];
+    const dimSeams = [...doc.querySelectorAll('.dim-seam')];
+    const dimParts = [...dimLabels, ...dimSectors, ...dimSeams];
+    const maskEdgePath = () => doc.querySelector('#mask path:last-of-type').getAttribute('d');
+    const hidden = el => win.getComputedStyle(el).display === 'none';
+
+    eq('the diminished ring has a sector per key', dimSectors.length, KEYS.length);
+    eq('the diminished ring has a label per key', dimLabels.length, KEYS.length);
+    eq('each seam is split so its inner half can leave with the ring', dimSeams.length, KEYS.length);
+    ok('dim chord toggle sits in the side panel beside Reset',
+      doc.querySelector('.side #dim-chord-toggle') && reset.parentElement === doc.querySelector('.side'),
+      'the dim chord toggle is not in the side panel with Reset');
+    ok('staff toggle sits in the side panel beside Reset',
+      doc.querySelector('.side #staff-toggle'),
+      'the staff toggle is not in the side panel with Reset');
+    ok('turning the dim toggle off puts the ring back on the wheel', dimParts.every(el => !hidden(el)),
+      'part of the diminished ring is still hidden with the toggle off');
+
+    const windowWithDim = maskEdgePath();
+    ok('the mask window reaches the hub while the diminished ring is shown',
+      windowWithDim.includes(`A${win.CF.config.R_HUB} ${win.CF.config.R_HUB}`),
+      'the mask window does not frame the diminished cell');
+
+    dimChords.checked = true;
+    dimChords.dispatchEvent(new Event('change', { bubbles: true }));
+    ok('hiding the diminished chords applies its body class', doc.body.classList.contains('dim-chords-off'));
+    eq('hiding takes the whole diminished ring off the wheel',
+      dimParts.filter(hidden).length, dimParts.length);
+    /* #disc is duplicated into a <use href="#disc"> veil for the blur outside the mask
+       window (spotlight.js). That clone only repaints on a direct style mutation of the
+       source nodes, so hiding by body class alone leaves eleven of the twelve sectors
+       still drawn in the veil. Computed style looks identical either way, so assert the
+       inline style to catch a regression back to class-only hiding. */
+    ok('the ring is hidden by inline style, not by the body class alone',
+      dimParts.every(el => el.style.display === 'none'),
+      'the diminished ring relies on the body class; the <use> veil clone would keep drawing it outside the window');
+    // display:none on the group does not cascade into the child's *computed* display,
+    // so test the group the label is drawn in rather than the label itself
+    const viiDegree = [...doc.querySelectorAll('.degree-label')]
+      .find(el => el.textContent === 'vii°').closest('.hover-container');
+    ok('the vii° degree label leaves with the ring', hidden(viiDegree),
+      'the vii° degree label is still shown without a diminished ring to sit in');
+
+    const windowWithoutDim = maskEdgePath();
+    ok('the mask window closes over the emptied band',
+      !windowWithoutDim.includes(`A${win.CF.config.R_HUB} ${win.CF.config.R_HUB}`) &&
+      windowWithoutDim !== windowWithDim,
+      'the mask window still dips into the space the diminished ring occupied');
+    ok('the scrim and the window edge agree on the new shape',
+      doc.querySelector('#mask path').getAttribute('d').includes(windowWithoutDim),
+      'the scrim was not recut to the reshaped window');
+
+    dimChords.checked = false;
+    dimChords.dispatchEvent(new Event('change', { bubbles: true }));
+    ok('showing the diminished chords clears the body class', !doc.body.classList.contains('dim-chords-off'));
+    eq('showing restores the whole diminished ring',
+      dimParts.filter(el => !hidden(el)).length, dimParts.length);
+    eq('showing restores the original mask window', maskEdgePath(), windowWithDim);
 
     reset.click();
     eq('Reset restores C', selected(), KEYS[0].major);

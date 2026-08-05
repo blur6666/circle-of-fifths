@@ -8,7 +8,7 @@ const {
   FS_MAJOR, FS_MINOR, FS_DIM,
   SECTOR, KEYS,
   fillDim, fillMin, fillMaj, textMaj, textMin, textDim,
-  C_STAGE, C_DISC, C_HUB, C_HUB_RIM, SEAM_W,
+  C_STAGE, C_DISC, C_HUB, SEAM_W,
   C_MASK_EDGE
 } = CF.config;
 const { pt, el, text, textLines, ringSector } = CF.geometry;
@@ -30,10 +30,8 @@ const sigText = k => {
 /* The centre reads out whichever key the window is sitting on. */
 function buildHub(svg) {
   const g = el('g', { id: 'hub' }, svg);
-  el('circle', {
-    cx: CX, cy: CY, r: R_HUB,
-    fill: C_HUB, stroke: C_HUB_RIM, 'stroke-width': 2.1
-  }, g);
+  // fill only - the key name reads as sitting in the blank centre, not in a dial
+  el('circle', { cx: CX, cy: CY, r: R_HUB, fill: C_HUB }, g);
   const name = text(g, '', { x: CX, y: CY, class: 'hub-key' });
   const dashMajor = document.getElementById('dash-major');
   const dashMinor = document.getElementById('dash-minor');
@@ -48,7 +46,7 @@ function buildHub(svg) {
     name.setAttribute('font-size', twoNames(k.major) ? 30 : 58);
     name.setAttribute('fill', textMaj(i));
     if (dashMajor) dashMajor.textContent = k.major;
-    if (dashMinor) dashMinor.textContent = minorChord(k.minor);
+    if (dashMinor) dashMinor.textContent = k.minor;
     if (dashDim) dashDim.textContent = k.dim;
     if (dashSignature) dashSignature.textContent = sigText(k);
     if (dashChords) dashChords.textContent = [
@@ -89,12 +87,21 @@ function draw() {
 
   el('circle', { cx: CX, cy: CY, r: R_OUT, fill: C_DISC }, bg);
 
+  /* The floor under the diminished ring, in the blank centre's own colour. The ring
+     covers it completely while it is on the wheel; take the ring off and the band it
+     occupied reads as part of the empty middle rather than as bare disc. */
+  el('circle', { cx: CX, cy: CY, r: R_DIM, fill: C_HUB }, bg);
+
   /* Everything that must not turn over when the wheel does, with the point it
      pivots about - its own anchor, not the centre. #disc gets rotate(a) and each of
      these gets rotate(-a) about itself, so it travels round the circle but stays
      the right way up. See setWheel() in wireControls. */
   const uprights = [];
   const upright = (node, ax, ay) => uprights.push({ node, ax, ay });
+
+  /* Every node that belongs to the diminished ring - its sectors, the inner half of
+     each seam, and its labels - so the whole band can be taken off the wheel. */
+  const dimParts = [];
 
   KEYS.forEach((k, i) => {
     const mid = i * SECTOR;
@@ -103,12 +110,22 @@ function draw() {
     // ring backgrounds
     el('path', { d: ringSector(R_MINOR, R_MAJOR, a0, a1), fill: fillMaj(i) }, bg);
     el('path', { d: ringSector(R_DIM,   R_MINOR, a0, a1), fill: fillMin(i) }, bg);
-    el('path', { d: ringSector(R_HUB,   R_DIM,   a0, a1), fill: fillDim(i) }, bg);
+    dimParts.push(el('path', {
+      d: ringSector(R_HUB, R_DIM, a0, a1), fill: fillDim(i), class: 'dim-sector'
+    }, bg));
 
-    // divider between this sector and the next - a seam of stage colour
-    const [dx0, dy0] = pt(R_HUB, a1), [dx1, dy1] = pt(R_OUT, a1);
+    /* Divider between this sector and the next - a seam of stage colour. Split at
+       R_DIM rather than drawn as one line, so the part crossing the diminished ring
+       can vanish with it and the rest stays put. */
+    const [sx0, sy0] = pt(R_HUB, a1);
+    const [sxd, syd] = pt(R_DIM, a1);
+    const [sx1, sy1] = pt(R_OUT, a1);
+    dimParts.push(el('line', {
+      x1: sx0, y1: sy0, x2: sxd, y2: syd, class: 'dim-seam',
+      stroke: C_STAGE, 'stroke-width': SEAM_W
+    }, strokes));
     el('line', {
-      x1: dx0, y1: dy0, x2: dx1, y2: dy1,
+      x1: sxd, y1: syd, x2: sx1, y2: sy1,
       stroke: C_STAGE, 'stroke-width': SEAM_W
     }, strokes);
 
@@ -120,11 +137,13 @@ function draw() {
     };
     // the diminished ring is the narrowest band, so a dual name stacks rather than
     // running "F°/E#°" across it and colliding with the seams
-    upright(twoNames(k.dim) ? textLines(labels, k.dim.split('/'), dimAttrs)
-                            : text(labels, k.dim, dimAttrs), dmx, dmy);
+    const dimLabel = twoNames(k.dim) ? textLines(labels, k.dim.split('/'), dimAttrs)
+                                     : text(labels, k.dim, dimAttrs);
+    dimParts.push(dimLabel);
+    upright(dimLabel, dmx, dmy);
 
     const [mnx, mny] = pt(R_MINOR_TEXT, mid);
-    upright(text(labels, minorChord(k.minor), {
+    upright(text(labels, k.minor, {
       x: mnx, y: mny, class: 'minor-label',
       'font-size': FS_MINOR(twoNames(k.minor)), fill: textMin(i)
     }), mnx, mny);
@@ -178,7 +197,14 @@ function draw() {
     }, svg);
   });
 
-  CF.controls.wireControls(spot, showKey, disc, uprights, placeStaves);
+  /* Inline styles rather than a body class: #disc is duplicated into the spotlight's
+     <use> veil, and that clone only repaints when the source nodes' own style changes. */
+  const setDimRingVisible = visible => {
+    const display = visible ? '' : 'none';
+    for (const node of dimParts) node.style.display = display;
+  };
+
+  CF.controls.wireControls(spot, showKey, disc, uprights, placeStaves, setDimRingVisible);
 }
 
 return { draw };
