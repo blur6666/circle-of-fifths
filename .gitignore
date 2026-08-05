@@ -5,3 +5,6 @@ Thumbs.db
 !.vscode/tasks.json
 .idea/
 .playwright-mcp/
+
+# Local dev screenshots that capture browser chrome (leak local paths)
+image2*.png
