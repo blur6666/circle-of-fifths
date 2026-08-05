@@ -29,14 +29,6 @@ The canonical preview URL is `http://127.0.0.1:4173/`.
 - Report which viewport sizes and interactions were checked. If browser tooling
   is unavailable, say so explicitly; do not describe source inspection as a
   completed browser validation.
-- Hovering a staff from automation needs animations suppressed first. The
-  `staff-drift` animation never settles, so a driver that waits for the element
-  to be "stable" will time out. Inject
-  `*, *::before, *::after { animation: none !important; transition: none !important; }`
-  before the hover. Same reason a degree-label position read mid-animation is
-  a few units off its resting radius — that is `float`, not drift.
-- Save screenshots under `.playwright-mcp/`, which is gitignored. A bare
-  filename lands in the repository root and shows up as an untracked stray.
 
 ## Ownership
 
@@ -66,14 +58,6 @@ The canonical preview URL is `http://127.0.0.1:4173/`.
   Update the dashboard through `showKey()` whenever that selected key changes.
 - The mask, wheel, labels, and staves have different rotation rules. Preserve
   the counter-rotation logic in `setWheel()` and `buildSpotlight().setAngle()`.
-- Any element that receives a counter-rotating `transform="rotate(-a x y)"`
-  attribute must keep `transform-box: view-box` and `transform-origin: 0 0`.
-  The attribute maps to the CSS transform property, so those two decide what
-  `x y` is measured from; `fill-box`/`center` made the degree labels swing out
-  of the wheel entirely. Leaving both off is not a fix — the CSS default
-  `transform-origin: 50% 50%` is wrong in the same way. See `.hover-container`
-  in `style.css`. `tests.html` cannot catch this; it must be checked in a
-  browser by turning the mask in both directions.
 
 ## Visual And Accessibility Checks
 
